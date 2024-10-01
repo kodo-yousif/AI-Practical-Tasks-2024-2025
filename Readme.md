@@ -61,7 +61,7 @@ Please apply following the folder structure as mentioned below.
 
 ```
 week-[n]/
-├─ group_[letter]/
+├─ Group [letter] - [project title]
 │ ├─ requirements.txt
 │ ├─ file 1
 │ ├─ file 2

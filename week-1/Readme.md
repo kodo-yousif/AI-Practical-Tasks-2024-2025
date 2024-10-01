@@ -1,4 +1,4 @@
-# 1- RGB Color Detection
+# 1- Fire Risk Detection
 
 Create a program that utilizes a computer's camera to identify and vocally announce using audio the risk percentage of is the room is on fire or not.
 
@@ -40,7 +40,7 @@ Develop an application that adjusts computers brightness display based on the am
 
 <b><i>Note: Should not use libraries to perform main goals</i></b>
 
-# 3- Motion Detection Application
+# 3- Motion Capturing Application
 
 Design a program that uses the computer's camera to capture the views when there is motion by saving the pictures or clip videos, and highlight the areas where the movements happened
 
@@ -59,7 +59,7 @@ Design a program that uses the computer's camera to capture the views when there
 
 <b><i>Note: Should not use libraries to perform main goals</i></b>
 
-# 4- Hand signal Control for Volume Adjustment
+# 4- Hand signal Audio Control
 
 Create a program that uses hand gestures captured from the camera to detect the hand signal and control the audio or a song that is being played in the background.
 
