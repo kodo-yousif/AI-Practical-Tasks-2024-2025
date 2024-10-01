@@ -49,6 +49,33 @@ Members can submit their assignments by opening pull requests on GitHub by uploa
 
 <b><i>Using GitHub pull requests is highly recommended this will be good practice for the future to be familiar with how the company works and contribute open source libraries.</i> </b>
 
+Pull request should contain any necessary information for the reviewers:
+
+- project title
+- group name
+- presenter name ( student name who will present the project )
+
+### Folder Structure
+
+Please apply following the folder structure as mentioned below.
+
+```
+week-[n]/
+├─ group_[letter]/
+│ ├─ requirements.txt
+│ ├─ file 1
+│ ├─ file 2
+│ ├─ file 2
+│ ├─ ..etc
+```
+
+You have to include your project Title, name and link as a comment in the top of your `main.py`
+
+```python
+# Title: 1- RGB Color Detection
+# any other information
+```
+
 ## Additional Notes
 
 - <b><i>Code Integrity: Groups should adhere to the guidelines regarding forbidden libraries and codes to ensure the integrity and learning - outcomes of the class.</i></b>
