@@ -1,14 +1,14 @@
 # 1- Fire Risk Detection
 
-Create a program that utilizes a computer's camera to identify and vocally announce using audio the risk percentage of is the room is on fire or not.
+Create a program that utilizes a computer's camera to identify fire risk, then produce a vocal alarm using an audio file.
 
 ## Requirements:
 
 - Utilize the computer's camera to capture real-time video.
 - The program should display a video feed, from a live camera feed.
-- Process the video frames to identify the amount of red color in it.
+- Process the video frames to identify the existence of fire.
 - The program should announce the state audibly.
-- can use publicly available models
+- Students can use publicly available models for fire detection
 
 ## Tools/Libraries Suggested:
 
@@ -16,7 +16,6 @@ Create a program that utilizes a computer's camera to identify and vocally annou
 - Time library for adding debounce ( Extra )
 - OpenCV for image processing
 - Numpy ( If Needed )
-- Pyttsx3 for text-to-speech ( Extra )
 - openCV models
 
 <b><i>Note: Should not use libraries to perform main goals</i></b>

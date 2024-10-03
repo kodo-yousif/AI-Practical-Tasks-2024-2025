@@ -21,13 +21,6 @@ There are three types of assignments in this class:
 - <b><i>Feedback and Revision:</i></b> Supervisors will provide feedback on the code ( <span style="color:cyan;">If the group give the assignment code before the deadline for fast review</span> ), pointing out any forbidden libraries or block codes. Teams should revise and change the forbidden code/libraries before the presentation day. ( <span style="color:red;">Using forbidden libraries or code will result in a grade decrease</span>)
   Each member should be prepared to answer questions.
 
-### Midterm Assignment
-
-- <b><i>Overview:</i></b> Given at the fourth week of the semester, this project requires more time and effort.
-- <b><i>Duration:</i></b> From the beginning of the semester to the midterm practical exam day.
-- <b><i>Presentation and Grading:</i></b> Similar to weekly assignments, including presentations and questioning.
-- <b><i>Deadline:</i></b> Due on the midterm practical exam day.
-
 ### Final Assignment
 
 - <b><i>Overview:</i></b> Assigned after the midterm.
