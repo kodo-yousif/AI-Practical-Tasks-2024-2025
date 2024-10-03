@@ -39,7 +39,7 @@ Develop an application that adjusts computers brightness display based on the am
 
 # 3- Motion Capturing Application
 
-Design a program that uses the computer's camera to capture the views when there is motion by saving the pictures or clip videos, and highlight the areas where the movements happened
+Design a program that uses the computer's camera to capture the views when there is motion by saving the clip videos, and highlight the areas where the movements happened.
 
 ## Requirements:
 
@@ -58,7 +58,7 @@ Design a program that uses the computer's camera to capture the views when there
 
 # 4- Hand signal Audio Control
 
-Create a program that uses hand gestures captured from the camera to detect the hand signal and control the audio or a song that is being played in the background.
+Create a program that uses computers camera to detect hand gestures and use the to control playing audio file to play/stop it.
 
 ## Requirements:
 
