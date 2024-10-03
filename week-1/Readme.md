@@ -65,8 +65,8 @@ Create a program that uses computers camera to detect hand gestures and use the 
 - Capture video from the computer’s camera. don't show the video
 - Detect and track hand movement in real-time.
 - Classify the hand signal
-- ability to play the audio
-- ability to stop the audio
+- Ability to play the audio
+- Ability to stop the audio
 
 ## Tools/Libraries Suggested:
 
@@ -74,7 +74,7 @@ Create a program that uses computers camera to detect hand gestures and use the 
 - OpenCV for image processing
 - Numpy (if needed)
 - PyCaw or another library to control system volume
-- public OpenCv models to detect hand gesture or any other model
+- Public OpenCv models to detect hand gesture or any other model
 
 <b><i>Note: Should not use libraries to perform main goals</i></b>
 
@@ -86,9 +86,9 @@ the goal is to create a face following program that follows the face in a smooth
 
 ## Requirements:
 
-- detect the faces.
-- fit all the faces in the screen.
-- follow the faces movement smoothly
+- Detect the faces.
+- Fit all the faces in the screen.
+- Follow the faces movement smoothly
 
 ## Tools/Libraries Suggested:
 
