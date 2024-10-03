@@ -67,8 +67,6 @@ Create a program that uses computers camera to detect hand gestures and use the 
 - Classify the hand signal
 - ability to play the audio
 - ability to stop the audio
-- ability to increase the volume
-- ability to decrees the volume
 
 ## Tools/Libraries Suggested:
 
