@@ -18,8 +18,6 @@ Create a program that utilizes a computer's camera to identify fire risk, then p
 - Numpy ( If Needed )
 - openCV models
 
-<b><i>Note: Should not use libraries to perform main goals</i></b>
-
 # 2- SmartLight Sensing Display
 
 Develop an application that adjusts computers brightness display based on the ambient light in its environment. and user can change the app sensevity while the program is running, In a dark room, the computers screen brightness is heigh. In a brightly lit room, the screen should turn darker.
