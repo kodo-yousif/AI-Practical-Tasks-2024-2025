@@ -21,7 +21,7 @@ This Python application uses OpenCV to detect motion using the computer's camera
 ## Usage
 1. Run the application:
    ```bash
-   python motion_detection.py
+   python main.py
    ```
 2. The application will start capturing video from your camera. It will automatically detect motion and start recording clips when motion is detected.
 3. <b>Stop the application:</b> Press `q` at any time to exit the application.
