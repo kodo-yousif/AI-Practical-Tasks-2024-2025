@@ -20,12 +20,12 @@
 
 ## Group C
 
-<b><i>Leader:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---
+<b><i>Leader:</i></b> Shko Maghdid  
+<b><i>Member:</i></b> Abdulla Sarbast  
+<b><i>Member:</i></b> Barham Bapir  
+<b><i>Member:</i></b> Awez Aso  
+<b><i>Member:</i></b> Hanas Hunar  
+<b><i>Member:</i></b> Zainaba Zrar
 
 ## Group D
 
