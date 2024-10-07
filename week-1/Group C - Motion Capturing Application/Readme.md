@@ -35,3 +35,4 @@ You can adjust the sensitivity parameters in the code to suit your needs:
 - **`blur_kernel_size`**: Kernel size for Gaussian blur to reduce noise (default is `(5, 5)`).
 - **`frame_skip`**: Number of frames to skip between motion detection (default is `1`).
 - **`initial_wait_time`**: Time in seconds to wait before capturing the initial background frame (default is `2` seconds).
+- **`background_update_rate`**: Rate at which the background model is updated (default is `0.05`).
