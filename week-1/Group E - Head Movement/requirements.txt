@@ -1,0 +1,5 @@
+# Requirements:
+Detect the faces.
+Fit all the faces in the screen.
+Follow the faces movement smoothly
+
