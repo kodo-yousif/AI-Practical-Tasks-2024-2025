@@ -1,8 +1,8 @@
 import cv2
 import time
+import numpy as np
 
 cap = cv2.VideoCapture(0)
-
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 frame_size = (frame_width, frame_height)
@@ -13,12 +13,13 @@ recording = False
 frame_count = 0
 no_motion_start_time = None
 
-# Sensitivity parameters
-threshold_value = 50  # Threshold for motion detection
-min_contour_area = 1000  # Minimum area to consider as motion
-blur_kernel_size = (5, 5)  # Gaussian blur kernel size
-no_motion_timeout = 3  # Time in seconds after which recording stops if no motion
-background_update_rate = 0.05  # Weight of the current frame for background update
+threshold_value = 20
+min_contour_area = 2500
+blur_kernel_size = 5
+no_motion_timeout = 3
+background_update_rate = 5
+group_threshold = 1
+eps_value = 1
 
 print("Waiting for camera to stabilize...")
 time.sleep(2)
@@ -30,9 +31,31 @@ if not ret:
     cv2.destroyAllWindows()
 
 background_frame = cv2.cvtColor(background_frame, cv2.COLOR_BGR2GRAY)
-background_frame = cv2.GaussianBlur(background_frame, blur_kernel_size, 0)
-
+background_frame = cv2.GaussianBlur(background_frame, (blur_kernel_size, blur_kernel_size), 0)
 background_frame = background_frame.astype("float")
+
+def combine_overlapping_rects(rectangles, group_thresh, eps_val):
+    if not rectangles:
+        return []
+
+    rectangles = np.array(rectangles)
+    new_rectangles = cv2.groupRectangles(rectangles.tolist(), group_thresh, eps_val)[0]
+
+    return new_rectangles
+
+def nothing(x):
+    pass
+
+
+cv2.namedWindow('Motion Detection')
+cv2.createTrackbar('Threshold', 'Motion Detection', threshold_value, 255, nothing)
+cv2.createTrackbar('Min Area', 'Motion Detection', min_contour_area, 5000, nothing)
+cv2.createTrackbar('Blur Kernel', 'Motion Detection', blur_kernel_size, 20, nothing)
+cv2.createTrackbar('No Motion Timeout', 'Motion Detection', no_motion_timeout, 10, nothing)
+cv2.createTrackbar('BG Update Rate', 'Motion Detection', int(background_update_rate * 100), 100, nothing)
+cv2.createTrackbar('Group Threshold', 'Motion Detection', group_threshold, 10, nothing)
+cv2.createTrackbar('EPS Value', 'Motion Detection', int(eps_value * 10), 100, nothing)  # Multiplied by 10 for precision
+
 
 while cap.isOpened():
     ret, frame1 = cap.read()
@@ -40,14 +63,23 @@ while cap.isOpened():
         print("Failed to grab frame. Exiting...")
         break
 
+    threshold_value = cv2.getTrackbarPos('Threshold', 'Motion Detection')
+    min_contour_area = cv2.getTrackbarPos('Min Area', 'Motion Detection')
+    blur_kernel_size = cv2.getTrackbarPos('Blur Kernel', 'Motion Detection') * 2 + 1
+    no_motion_timeout = cv2.getTrackbarPos('No Motion Timeout', 'Motion Detection')
+    background_update_rate = cv2.getTrackbarPos('BG Update Rate', 'Motion Detection') / 100.0
+    group_threshold = cv2.getTrackbarPos('Group Threshold', 'Motion Detection')
+    eps_value = cv2.getTrackbarPos('EPS Value', 'Motion Detection') / 10.0
+
     gray_frame = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
-    gray_frame = cv2.GaussianBlur(gray_frame, blur_kernel_size, 0)
+    gray_frame = cv2.GaussianBlur(gray_frame, (blur_kernel_size, blur_kernel_size), 0)
 
     diff = cv2.absdiff(cv2.convertScaleAbs(background_frame), gray_frame)
     _, thresh = cv2.threshold(diff, threshold_value, 255, cv2.THRESH_BINARY)
 
     contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
+    rectangles = []
     motion_detected = False
 
     for contour in contours:
@@ -55,7 +87,12 @@ while cap.isOpened():
             continue
 
         x, y, w, h = cv2.boundingRect(contour)
-        cv2.rectangle(frame1, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        rectangles.append([x, y, x + w, y + h])
+
+    combined_rectangles = combine_overlapping_rects(rectangles, group_threshold, eps_value)
+
+    for rectangle in combined_rectangles:
+        cv2.rectangle(frame1, (rectangle[0], rectangle[1]), (rectangle[2], rectangle[3]), (0, 255, 0), 2)
         motion_detected = True
 
     cv2.accumulateWeighted(gray_frame, background_frame, background_update_rate)
