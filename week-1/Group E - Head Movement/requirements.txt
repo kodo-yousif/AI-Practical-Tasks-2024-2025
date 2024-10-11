@@ -1,5 +1,3 @@
-# Requirements:
-Detect the faces.
-Fit all the faces in the screen.
-Follow the faces movement smoothly
-
+python=3.13.0
+opencv=4.10.0
+numpy=2.1
