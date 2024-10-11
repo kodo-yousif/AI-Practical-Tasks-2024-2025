@@ -50,15 +50,28 @@ while True:
         prev_x, prev_y, prev_w, prev_h = x_min, y_min, x_max, y_max
 
 
-        # Crop the image around the faces
+        # Calculate the aspect ratio of the detected area
+        cropped_width = x_max - x_min
+        cropped_height = y_max - y_min
+        aspect_ratio = cropped_width / cropped_height
+
+        frame_height, frame_width = frame.shape[:2]
+        target_width = frame_width
+        target_height = min(int(target_width / aspect_ratio), frame_height)
+        
+        # Crop the frame Resize the cropped frame with the correct aspect ratio
         cropped_frame = frame[y_min:y_max, x_min:x_max]
+        resized_frame = cv2.resize(cropped_frame, (target_width, target_height))
 
-        # Resize the cropped frame to match the original window size
-        resized_frame = cv2.resize(cropped_frame, (frame.shape[1], frame.shape[0]))
+        # Create a blank frame to display the resized frame at the center
+        final_frame = np.zeros_like(frame)
+        y_offset = (frame_height - target_height) // 2
 
-        # Display the resulting frame
+        # Place the resized frame in the center
+        final_frame[y_offset:y_offset + target_height, :] = resized_frame
+
+
         cv2.imshow('Face Tracker', resized_frame)
-
     else:
         # If no faces are detected, show the full frame
         cv2.imshow('Face Tracker', frame)
