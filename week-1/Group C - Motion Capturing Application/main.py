@@ -17,7 +17,6 @@ no_motion_start_time = None
 threshold_value = 50  # Threshold for motion detection
 min_contour_area = 1000  # Minimum area to consider as motion
 blur_kernel_size = (5, 5)  # Gaussian blur kernel size
-frame_skip = 1  # Skip frames to improve performance
 no_motion_timeout = 3  # Time in seconds after which recording stops if no motion
 background_update_rate = 0.05  # Weight of the current frame for background update
 
@@ -40,10 +39,6 @@ while cap.isOpened():
     if not ret:
         print("Failed to grab frame. Exiting...")
         break
-
-    if frame_count % frame_skip != 0:
-        frame_count += 1
-        continue
 
     gray_frame = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
     gray_frame = cv2.GaussianBlur(gray_frame, blur_kernel_size, 0)
@@ -87,8 +82,6 @@ while cap.isOpened():
     if cv2.waitKey(1) & 0xFF == ord('q'):
         print("Exiting...")
         break
-
-    frame_count += 1
 
 cap.release()
 if recording:
