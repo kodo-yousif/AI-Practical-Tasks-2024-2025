@@ -10,7 +10,6 @@ frame_size = (frame_width, frame_height)
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 out = None
 recording = False
-frame_count = 0
 no_motion_start_time = None
 
 threshold_value = 20
@@ -33,15 +32,6 @@ background_frame = cv2.cvtColor(background_frame, cv2.COLOR_BGR2GRAY)
 background_frame = cv2.GaussianBlur(background_frame, (blur_kernel_size, blur_kernel_size), 0)
 background_frame = background_frame.astype("float")
 
-def combine_overlapping_rects(rectangles, group_thresh, eps_val):
-    if not rectangles:
-        return []
-
-    rectangles = np.array(rectangles)
-    new_rectangles = cv2.groupRectangles(rectangles.tolist(), group_thresh, eps_val)[0]
-
-    return new_rectangles
-
 def nothing(x):
     pass
 
@@ -56,6 +46,9 @@ cv2.createTrackbar('SigmaX', 'Motion Detection', sigmaX, 1000, nothing)
 
 while cap.isOpened():
     ret, consecutive_frame = cap.read()
+
+    # cv2.imshow('Original', consecutive_frame)
+
     if not ret:
         print("Failed to grab frame. Exiting...")
         break
@@ -89,7 +82,7 @@ while cap.isOpened():
 
     for contour in contours:
         if cv2.contourArea(contour) > min_contour_area:
-            cv2.drawContours(consecutive_frame, [contour], -1, (0, 255, 0), 2)
+            cv2.drawContours(consecutive_frame, [contour], -1, (0, 255, 255), 2)
             motion_detected = True
 
     cv2.accumulateWeighted(gray_frame, background_frame, background_update_rate)
@@ -99,6 +92,8 @@ while cap.isOpened():
             out = cv2.VideoWriter(f'motion_{int(time.time())}.avi', fourcc, 20.0, frame_size)
             recording = True
             print("Recording started...")
+
+
         no_motion_start_time = None
         out.write(consecutive_frame)
 
