@@ -37,7 +37,7 @@ def is_fire_color(frame, x, y, w, h):
 def play_alarm_sound_function():
     global alarm_playing
     alarm_playing = True
-    betterplaysound.playsound('s.mp3', True)
+    betterplaysound.playsound('fire_alarm.mp3', True)
     alarm_playing = False
     print("Fire alarm sound ended")
 
