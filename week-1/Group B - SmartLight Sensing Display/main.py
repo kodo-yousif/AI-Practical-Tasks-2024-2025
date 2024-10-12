@@ -27,8 +27,10 @@ cap = cv2.VideoCapture(0)
 
 try:
     while True:
-        ret, frame = cap.read()
-        if not ret:
+        # act for knowing if the camera is working and ready
+        # while frame will give us 1 frame of now to process it
+        act, frame = cap.read()
+        if not act:
             break
 
         # Get the average light intensity from the frame
@@ -40,9 +42,10 @@ try:
         # Show the frame for visual feedback (optional)
         cv2.imshow("Camera Feed", frame)
 
-        # Press 'q' to exit the loop
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        # Press 'esc' to exit the loop 27 is the unicode of escape button
+        if cv2.waitKey(1) & 0xFF == 27:
             break
+        # or press the close button
         if cv2.getWindowProperty("Camera Feed", cv2.WND_PROP_VISIBLE) < 1:
             break
 finally:
