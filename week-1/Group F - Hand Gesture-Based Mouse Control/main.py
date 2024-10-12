@@ -11,9 +11,8 @@ camera = cv2.VideoCapture(0)
 last_scroll_time = time.time()
 prev_time = 0
 
-# Initialize previous mouse coordinates
 prev_mouse_x, prev_mouse_y = 0, 0
-alpha = 0.2  # Smoothing factor
+alpha = 0.2
 
 while True:
     _, image = camera.read()
