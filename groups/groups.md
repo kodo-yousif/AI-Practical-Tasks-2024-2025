@@ -2,12 +2,12 @@
 
 ## Group A
 
-<b><i>Leader:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---
+<b><i>Leader:</i></b> Rezdar Najeeb
+<b><i>Member:</i></b> Karwan Yousif
+<b><i>Member:</i></b> Ayar Naseem
+<b><i>Member:</i></b> Dyari Haider
+<b><i>Member:</i></b> Muhamad Rasul
+<b><i>Member:</i></b> Muhamad Hoshyar
 
 ## Group B
 
