@@ -16,11 +16,13 @@ threshold_value = 20
 min_contour_area = 500
 blur_kernel_size = 5
 no_motion_timeout = 3
-background_update_rate = 5
+background_update_rate = 0.5
 sigmaX = 0
 
+cap.read()
+
 print("Waiting for camera to stabilize...")
-time.sleep(2)
+time.sleep(1)
 
 ret, background_frame = cap.read()
 if not ret:
