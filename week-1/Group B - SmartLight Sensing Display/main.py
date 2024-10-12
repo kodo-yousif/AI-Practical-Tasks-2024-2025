@@ -1,3 +1,7 @@
+# Title : SmartLight Sensing Display
+# Group : B
+# Presenter : Ahmad Esmat Abdulwahid
+
 import cv2
 import screen_brightness_control as sbc
 
