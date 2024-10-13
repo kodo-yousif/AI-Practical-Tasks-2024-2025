@@ -11,12 +11,12 @@
 
 ## Group B
 
-<b><i>Leader:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---
+<b><i>Leader: Ahmad Esmat</i></b> ---  
+<b><i>Member: Areen Aree</i></b> ---  
+<b><i>Member: Alend Mohammed</i></b> ---  
+<b><i>Member: Mohammed Rajab</i></b> ---  
+<b><i>Member: Shawgar Mohammed</i></b> ---  
+<b><i>Member: Dween Hemn</i></b> ---
 
 ## Group C
 
