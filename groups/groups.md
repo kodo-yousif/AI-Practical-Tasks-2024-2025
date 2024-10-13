@@ -38,12 +38,10 @@
 
 ## Group E
 
-<b><i>Leader:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---  
-<b><i>Member:</i></b> ---
+<b><i>Leader:</i></b> Ahmed Adnan 
+<b><i>Member:</i></b> Shady Burhan
+<b><i>Member:</i></b> Muhammed Najat 
+<b><i>Member:</i></b> Rayan Dlshad
 
 ## Group F
 
