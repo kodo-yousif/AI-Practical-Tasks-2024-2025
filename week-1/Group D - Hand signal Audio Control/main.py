@@ -42,7 +42,6 @@ try:
                 for hand_landmarks in results.multi_hand_landmarks:
                     landmarks = hand_landmarks.landmark
                     gesture = classify_thumb_position(landmarks)
-                    cv2.putText(frame, gesture, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                     if gesture == "Thumbs Up" and not music_playing:
                         pygame.mixer.music.play(-1)
                         music_playing = True
@@ -50,9 +49,7 @@ try:
                         pygame.mixer.music.stop()
                         music_playing = False
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                print("Exiting the program.")
-                break
+
 
 except Exception as e:
     print("An error ")
