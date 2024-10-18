@@ -3,7 +3,7 @@
 
 import cv2
 import numpy as np
-def smooth_transition(old_value, new_value, alpha=0.1):
+def smooth_transition(old_value, new_value, alpha=0.5):
     return old_value * (1 - alpha) + new_value * alpha
     # It uses an exponential moving average approach where alpha (0.1 here) controls how quickly the bounding box moves towards the new position.
 
@@ -36,7 +36,7 @@ while True:
         # Add padding
         padding = 50
         x_min = max(0, x_min - padding)
-        y_min = max(0, y_min - padding)
+        y_min = max(0, y_min - padding-100)
         x_max = min(frame.shape[1], x_max + padding)
         y_max = min(frame.shape[0], y_max + padding)
 
