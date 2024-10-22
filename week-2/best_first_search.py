@@ -5,7 +5,6 @@ import time
 
 from puzzle_board.puzzle import get_random_puzzle
 from puzzle_board.Tiles import Tiles
-print(get_random_puzzle())
 goal_state = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
 
 WINDOW_WIDTH, WINDOW_HEIGHT = 495, 550
@@ -23,8 +22,6 @@ def manhattan(puzzle):
                 correct_x = (puzzle[i][j] - 1) // 3
                 correct_y = (puzzle[i][j] - 1) % 3
                 distance += abs(i - correct_x) + abs(j - correct_y)
-                print(distance, correct_x, correct_y, i, j)
-    print('|')
     return distance
 
 
@@ -81,8 +78,9 @@ def format_solution_output(state):
         for num in row:
             output += f" {num if num != 0 else ' '} ║"
         output += "\n"
-        output +=           "╠═══╬═══╬═══╣\n"
+        output += "╠═══╬═══╬═══╣\n"
     output = output[:-14] + "╚═══╩═══╩═══╝"
+
     return output
 
 
@@ -97,8 +95,7 @@ def visualize_solution(path, total_cost):
     BUTTON_RECT = pygame.Rect(365, 505, 125, 40)
     button_text = font.render('Try again', True, BLACK)
 
-    try_again = False
-
+    # try_again = False
     for step_num, state in enumerate(path):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -107,8 +104,6 @@ def visualize_solution(path, total_cost):
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if BUTTON_RECT.collidepoint(event.pos) and step_num == len(path) - 1:
-                    try_again = True
-                    if __name__ == "__main__":
                         initial_puzzle = get_random_puzzle()
                         solution_path, total_cost = best_first_search(initial_puzzle)
 
@@ -122,34 +117,32 @@ def visualize_solution(path, total_cost):
 
         for i in range(3):
             for j in range(3):
-                if state[i][j] != 0:
+                # if state[i][j] != 0:
                     tile = Tiles(state[i][j], TILE_SIZE * j, TILE_SIZE * i)
                     gameDisplay.blit(pygame.transform.scale(tile.image, (TILE_SIZE, TILE_SIZE)), tile.rectangle)
 
         if step_num == len(path) - 1:
             total_cost_text = font.render(f'Total cost: {total_cost}', True, WHITE)
             gameDisplay.blit(total_cost_text, (10, 510))
+            pygame.draw.rect(gameDisplay, WHITE, BUTTON_RECT, border_radius=5)
+            gameDisplay.blit(button_text, (BUTTON_RECT.x + 10, BUTTON_RECT.y + 5))
         else:
             step_text = font.render(f'Step: {step_num + 1}', True, WHITE)
             gameDisplay.blit(step_text, (10, 510))
 
-        pygame.draw.rect(gameDisplay, WHITE, BUTTON_RECT, border_radius=5)
-        gameDisplay.blit(button_text, (BUTTON_RECT.x + 10, BUTTON_RECT.y + 5))
+
 
         pygame.display.update()
         time.sleep(1)
         clock.tick(1)
 
-    while not try_again:
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if BUTTON_RECT.collidepoint(event.pos):
-                    try_again = True
-                    if __name__ == "__main__":
-
                         initial_puzzle = get_random_puzzle()
                         solution_path, total_cost = best_first_search(initial_puzzle)
 
@@ -162,7 +155,7 @@ def visualize_solution(path, total_cost):
         gameDisplay.fill(BLACK)
         for i in range(3):
             for j in range(3):
-                if state[i][j] != 0:
+                # if state[i][j] != 0:
                     tile = Tiles(state[i][j], TILE_SIZE * j, TILE_SIZE * i)
                     gameDisplay.blit(pygame.transform.scale(tile.image, (TILE_SIZE, TILE_SIZE)), tile.rectangle)
 
@@ -176,10 +169,6 @@ def visualize_solution(path, total_cost):
         clock.tick(30)
 
     pygame.quit()
-
-
-
-
 
 if __name__ == "__main__":
 
