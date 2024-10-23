@@ -115,7 +115,20 @@ def board():
 
 		pygame.display.update()
 
-		clock.tick(30); 
+		clock.tick(30);
+
+
+def get_obstacle_pos():
+    global GameBoard
+    obstacles = []
+
+    # Loop through the 6x6 GameBoard to find obstacle positions
+    for i in range(6):
+        for j in range(6):
+            if GameBoard[i][j].number == 0:  # Assuming 0 represents an obstacle
+                obstacles.append((i, j))
+
+    return obstacles
 
 
 def move_to(place):
