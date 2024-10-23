@@ -1,0 +1,2 @@
+Path: ['top', 'top', 'left', 'left']
+Total Cost: 6
