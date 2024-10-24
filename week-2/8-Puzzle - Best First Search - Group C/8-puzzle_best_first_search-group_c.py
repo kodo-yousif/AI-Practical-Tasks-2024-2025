@@ -85,7 +85,7 @@ def format_solution_output(state):
 
 def tile_swap_loop():
     global solution_path
-    time.sleep(2)
+    time.sleep(1.5)
     for step in solution_path:
         print(step)
         swapTiles(step[0], step[1])
