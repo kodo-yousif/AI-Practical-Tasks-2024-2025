@@ -91,7 +91,7 @@ def swapTiles(i, j):
         GameBoard = GameBoard[i][j].swapTiles(GameBoard, emptyTilePosI, emptyTilePosJ, i, j)
         emptyTilePosI = i
         emptyTilePosJ = j
-        steps += 1  # Increment step counter after a successful swap
+        steps += 1
     else:
         print("Error: The tiles are not neighbors and cannot be swapped.")
 
