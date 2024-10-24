@@ -1,17 +1,7 @@
 import threading
 import time
 import random
-from vacuum_board.vacuum import (
-    board, set_board, get_board, get_dirt_pos, get_vacuum_pos, move_to
-)
-
-def write_solution(path, total_cost, message=None):
-    with open("solution.txt", "w") as f:
-        if message:
-            f.write(message + "\n")
-        else:
-            f.write(f"Path: {path}\n")
-            f.write(f"Total Cost: {total_cost}\n")
+from vacuum_board.vacuum import (board, set_board, get_board, get_dirt_pos, get_vacuum_pos, move_to)
 
 # we are initializing the board on the separate thread because (pygame)
 # runs in an event loop, so it blocks other's code from executing
@@ -23,18 +13,24 @@ def initialize_board():
     time.sleep(2)
     
     
+def write_solution(path, total_cost, message=None):
+    with open("solution.txt", "w") as f:
+        f.write("Initial Board State:\n")
+        for row in get_board():
+            f.write(" ".join(map(str, row)) + "\n")
+        f.write("\n")
+        
+        if message:
+            f.write(message + "\n")
+        else:
+            f.write(f"Path: {path}\n")
+            f.write(f"Total Cost: {total_cost}\n")
 
-# BFS algorithm to find the path to the dirt
+# BFS algorithm to find the shortest path to the dirt (queue)
 def bfs_search():
-    initial_pos = tuple(get_vacuum_pos())
-    goal_pos = tuple(get_dirt_pos())
-    board_state = get_board() 
-    # this converts the GameBoard into a 2D array of numbers
-    # 10 Vacuum
-    # 5 Dirt tile
-    # 0 Obstacle
-    # 1 Floor Tile
-    # Ensure this is called after GUI initialization
+    initial_pos = tuple(get_vacuum_pos()) #(1,1)
+    goal_pos = tuple(get_dirt_pos())      #(2,3)
+    board_state = get_board()             # 2d array
 
     # Directions: (movement_name, (i, j offset), cost)
     moves = [
@@ -45,16 +41,19 @@ def bfs_search():
     ]
 
     # (current_position, path_taken, total_cost)
-    queue = [(initial_pos, [], 0)]  
-    visited = set([initial_pos])
+    queue = [(initial_pos, [], 0)] # (1,1), no path ,0
+    visited = set([initial_pos])   # add (1,1) to (visited set) to prevent visiting again
 
     while queue:
-        (current_pos, path, cost) = queue.pop(0)
+        (current_pos, path, cost) = queue.pop(0)   
+        # (1,1) , []       , 0 first
+        # (0, 1), ["top"]  , 2 second
+        # (1, 2), ["right"], 1 third
+        
+        if current_pos == goal_pos: # if pass then that means Solution is found
+            return path, cost  
 
-        if current_pos == goal_pos:
-            return path, cost  # Solution found
-
-        # Explore neighbors
+        # Explore neighbors to check the valid moves
         for move_name, (di, dj), move_cost in moves:
             new_pos = (current_pos[0] + di, current_pos[1] + dj)
 
@@ -67,7 +66,7 @@ def bfs_search():
                 visited.add(new_pos)
                 queue.append((new_pos, path + [move_name], cost + move_cost))
 
-    return None, None  # No solution found
+    return None, None  # if No solution found so return this
 
 
 def main():
@@ -84,11 +83,14 @@ def main():
         if rand_num != vacuum_place and rand_num != dirt_place:
             result.append(rand_num)
 
+    # to test the no solution state
+    # set_board([0, 7, [1,6]]) 
     set_board([vacuum_place, dirt_place, result])
-    initialize_board()
-
+    initialize_board()        
+        
     path, total_cost = bfs_search()
 
+    
     if path is None:
         write_solution([], 0, "No solution found: Obstacles block the path.")
         print("No solution found: Obstacles block the path.")
