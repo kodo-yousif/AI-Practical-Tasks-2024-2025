@@ -5,7 +5,9 @@ import time
 import threading
 import sys
 from puzzle_board.puzzle import board, swapTiles, get_board, init_puzzle, get_random_puzzle
+
 goal_state = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+
 
 def getInvCount(arr):
     inv_count = 0
@@ -16,6 +18,7 @@ def getInvCount(arr):
                 inv_count += 1
     return inv_count
 
+
 def manhattan(puzzle):
     distance = 0
     for i in range(3):
@@ -25,6 +28,7 @@ def manhattan(puzzle):
                 correct_y = (puzzle[i][j] - 1) % 3
                 distance += abs(i - correct_x) + abs(j - correct_y)
     return distance
+
 
 def get_neighbors(puzzle):
     neighbors = []
@@ -38,6 +42,7 @@ def get_neighbors(puzzle):
                 empty_j]
             neighbors.append(new_puzzle)
     return neighbors
+
 
 def best_first_search(start_puzzle):
     priority_queue = []
@@ -56,9 +61,11 @@ def best_first_search(start_puzzle):
             if tuple(map(tuple, neighbor)) not in visited:
                 new_empty_pos = [(i, j) for i in range(3) for j in range(3) if neighbor[i][j] == 0][0]
                 new_path = path + [new_empty_pos]
-                heapq.heappush(priority_queue, (manhattan(neighbor), cost + 1, neighbor, new_path, complete_puzzle_path + [current_puzzle]))
+                heapq.heappush(priority_queue, (
+                manhattan(neighbor), cost + 1, neighbor, new_path, complete_puzzle_path + [current_puzzle]))
 
     return None, -1, None
+
 
 def save_solution_to_file(path, cost, filename='solution.txt'):
     with open(filename, 'w', encoding='utf-8') as f:
@@ -70,6 +77,7 @@ def save_solution_to_file(path, cost, filename='solution.txt'):
             f.write(format_solution_output(state))
             f.write("\n")
         f.write(f"Total cost: {cost}\n")
+
 
 def format_solution_output(state):
     output = "╔═══╦═══╦═══╗\n"
@@ -83,13 +91,14 @@ def format_solution_output(state):
 
     return output
 
+
 def tile_swap_loop():
     global solution_path
     time.sleep(1.5)
     for step in solution_path:
-        print(step)
         swapTiles(step[0], step[1])
         time.sleep(0.5)
+
 
 def visualize_solution(initial_puzzle):
     init_puzzle(initial_puzzle)
