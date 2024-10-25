@@ -1,9 +1,10 @@
 import time
 import threading
 from queue import PriorityQueue
-from vacuum_board.vacuum import board, get_board, set_board, get_random_board, move_to, get_dirt_pos, get_vacuum_pos, get_obstacle_pos
+from vacuum_board.vacuum import board, get_board, set_board, get_random_board, move_to, get_dirt_pos, get_vacuum_pos, get_obstacle_pos, get_board_solution
 
-def bfs_find_dirt_with_cost_and_obstacles():
+def bfs_find_dirt_with_cost():
+
     start_pos = tuple(get_vacuum_pos())
     dirt_pos = tuple(get_dirt_pos())
 
@@ -18,19 +19,15 @@ def bfs_find_dirt_with_cost_and_obstacles():
         current_cost, current_pos, path = queue.get()
 
         if current_pos == dirt_pos:
-            return path
-
+            return path, current_cost, path
 
         for dx, dy, cost, direction in directions:
             new_pos = (current_pos[0] + dx, current_pos[1] + dy)
-
 
             if is_valid_position(new_pos) and new_pos not in visited:
                 visited.add(new_pos)
                 new_cost = current_cost + cost
                 queue.put((new_cost, new_pos, path + [direction]))
-
-        print(f"Current Position: {current_pos}, Visited: {visited}")
 
     return None
 
@@ -48,21 +45,49 @@ def follow_path(path):
         move_to(move)
         time.sleep(0.5)
 
-set_board(get_random_board())
+
+def save_solution(path_to_dirt, cost, initial_board):
+    with open('solution.txt', 'w') as f:
+        f.write("Initial Board:\n")
+
+        f.write(initial_board)
+
+        f.write("\nPath to Dirt:\n")
+        if path_to_dirt == "{No Path}":
+            f.write("{No Path}\n")
+        else:
+            f.write(" -> ".join(path_to_dirt) + "\n")
+
+        f.write(f"\nCost: {cost}\n")
+
+
+initial_board = get_random_board()
+set_board(initial_board)
 board_thread = threading.Thread(target=board)
+print(initial_board)
 board_thread.start()
 
 time.sleep(2)
 
-print(get_board())
-print(get_vacuum_pos())
-print(get_dirt_pos())
+result = bfs_find_dirt_with_cost()
 
-path_to_dirt = bfs_find_dirt_with_cost_and_obstacles()
-print("test")
-print(path_to_dirt)
-if path_to_dirt:
+if result is not None:
+    path_to_dirt, cost, path = result
     follow_path(path_to_dirt)
+    print(cost)
+    print(path)
     print("Dirt cleaned!")
+
+    initial_board = get_board_solution()
+
+    save_solution(path_to_dirt, cost, initial_board)
+
 else:
-    print("Vacuum is either trapped or no dirt found.")
+    print("The vacuum can't go to the dirt, because of obstacles.")
+
+    path_to_dirt = "{No Path}"
+    cost = 0
+
+    initial_board = get_board_solution()
+
+    save_solution(path_to_dirt, cost, initial_board)

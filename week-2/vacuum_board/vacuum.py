@@ -7,14 +7,12 @@ from vacuum_board.Tiles import Tiles
 GameBoard=[[1 for _ in range(6)] for _ in range(6)]
 vacuumTilePosI=0 
 vacuumTilePosJ=0
-
 dirtTilePosI=0 
 dirtTilePosJ=0
 
 init_board = [[1 for _ in range(6)] for _ in range(6)]
 
 puzzle = init_board
-
 
 def get_random_board(vacuum = False, dirt = False, obstacles = False ):
 
@@ -117,20 +115,6 @@ def board():
 
 		clock.tick(30);
 
-
-def get_obstacle_pos():
-    global GameBoard
-    obstacles = []
-
-    # Loop through the 6x6 GameBoard to find obstacle positions
-    for i in range(6):
-        for j in range(6):
-            if GameBoard[i][j].number == 0:  # Assuming 0 represents an obstacle
-                obstacles.append((i, j))
-
-    return obstacles
-
-
 def move_to(place):
 	global GameBoard, vacuumTilePosI, vacuumTilePosJ
 	
@@ -166,7 +150,6 @@ def move_to(place):
 
 	return get_board()
 
-
 def get_dirt_pos():
 	return [dirtTilePosI, dirtTilePosJ]
 
@@ -183,3 +166,37 @@ def get_board():
 			array_6x6[i][j] = GameBoard[i][j].number
     
 	return array_6x6
+
+def get_obstacle_pos():
+    global GameBoard
+    obstacles = []
+
+    for i in range(6):
+        for j in range(6):
+            if GameBoard[i][j].number == 0:
+                obstacles.append((i, j))
+
+    return obstacles
+
+def get_board_solution():
+	global GameBoard
+	board_representation = ""
+
+	# Loop through the GameBoard to build a string representation
+	for i in range(6):
+		for j in range(6):
+			tile_value = GameBoard[i][j].number
+
+			# Replace numbers with symbols for better readability
+			if tile_value == 1:
+				board_representation += "[ ] "  # Empty tile
+			elif tile_value == 0:
+				board_representation += "[#] "  # Obstacle
+			elif tile_value == 5:
+				board_representation += "[D] "  # Dirt
+			elif tile_value == 10:
+				board_representation += "[V] "  # Vacuum
+
+		board_representation += "\n"
+
+	return board_representation
