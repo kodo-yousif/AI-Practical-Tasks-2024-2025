@@ -178,7 +178,7 @@ def get_obstacle_pos():
 
     return obstacles
 
-def get_board_solution():
+def get_board_for_save():
 	global GameBoard
 	board_representation = ""
 

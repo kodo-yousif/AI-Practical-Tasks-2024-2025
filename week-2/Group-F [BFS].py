@@ -1,7 +1,7 @@
 import time
 import threading
 from queue import PriorityQueue
-from vacuum_board.vacuum import board, get_board, set_board, get_random_board, move_to, get_dirt_pos, get_vacuum_pos, get_obstacle_pos, get_board_solution
+from vacuum_board.vacuum import board, get_board, set_board, get_random_board, move_to, get_dirt_pos, get_vacuum_pos, get_obstacle_pos, get_board_for_save
 
 def bfs_find_dirt_with_cost():
 
@@ -51,9 +51,9 @@ def save_solution(path_to_dirt, cost, initial_board):
 
         f.write(initial_board)
 
-        f.write("\nPath to Dirt:\n")
-        if path_to_dirt == "{No Path}":
-            f.write("{No Path}\n")
+        f.write("\nPath to Dirt: ")
+        if path_to_dirt == "No Path":
+            f.write("No Path\n")
         else:
             f.write(" -> ".join(path_to_dirt) + "\n")
 
@@ -70,21 +70,16 @@ result = bfs_find_dirt_with_cost()
 
 if result is not None:
     path, cost = result
+    initial_board = get_board_for_save()
+    save_solution(path, cost, initial_board)
     follow_path(path)
     print(f"The cost to dirt: {cost}")
     print(f"The path to dirt: {path}")
     print("Dirt cleaned!")
 
-    initial_board = get_board_solution()
-
-    save_solution(path, cost, initial_board)
-
 else:
-    print("The vacuum can't go to the dirt, because of obstacles.")
-
-    path_to_dirt = "{No Path}"
+    path_to_dirt = "No Path"
     cost = 0
-
-    initial_board = get_board_solution()
-
+    initial_board = get_board_for_save()
     save_solution(path_to_dirt, cost, initial_board)
+    print("The vacuum can't go to the dirt, because of obstacles.")
