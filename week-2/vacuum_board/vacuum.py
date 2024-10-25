@@ -182,12 +182,10 @@ def get_board_solution():
 	global GameBoard
 	board_representation = ""
 
-	# Loop through the GameBoard to build a string representation
 	for i in range(6):
 		for j in range(6):
 			tile_value = GameBoard[i][j].number
 
-			# Replace numbers with symbols for better readability
 			if tile_value == 1:
 				board_representation += "[ ] "  # Empty tile
 			elif tile_value == 0:
