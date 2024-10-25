@@ -1,0 +1,12 @@
+Initial Board:
+[ ] [ ] [ ] [ ] [ ] [ ] 
+[ ] [#] [ ] [ ] [#] [ ] 
+[ ] [#] [ ] [ ] [ ] [ ] 
+[ ] [ ] [ ] [ ] [ ] [ ] 
+[ ] [ ] [ ] [#] [ ] [ ] 
+[ ] [ ] [#] [ ] [ ] [V] 
+
+Path to Dirt:
+right -> right -> top -> right -> right -> bottom -> bottom -> right
+
+Cost: 7
