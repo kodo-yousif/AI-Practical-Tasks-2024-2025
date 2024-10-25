@@ -138,7 +138,7 @@ def move_to(place):
 		print("Error: Cant go out of the board.")
 		return get_board()
 
-	if GameBoard[tempI][tempJ].number == 5:
+	if GameBoard[tempI][tempJ].number == 6:
 		print("Error: Cant go to a blocked tile.")
 
 	GameBoard[tempI][tempJ].im_vacuum()

@@ -19,7 +19,7 @@ def bfs_find_dirt_with_cost():
         current_cost, current_pos, path = queue.get()
 
         if current_pos == dirt_pos:
-            return path, current_cost, path
+            return path, current_cost
 
         for dx, dy, cost, direction in directions:
             new_pos = (current_pos[0] + dx, current_pos[1] + dy)
@@ -45,7 +45,6 @@ def follow_path(path):
         move_to(move)
         time.sleep(0.5)
 
-
 def save_solution(path_to_dirt, cost, initial_board):
     with open('solution.txt', 'w') as f:
         f.write("Initial Board:\n")
@@ -60,11 +59,9 @@ def save_solution(path_to_dirt, cost, initial_board):
 
         f.write(f"\nCost: {cost}\n")
 
-
 initial_board = get_random_board()
 set_board(initial_board)
 board_thread = threading.Thread(target=board)
-print(initial_board)
 board_thread.start()
 
 time.sleep(2)
@@ -72,15 +69,15 @@ time.sleep(2)
 result = bfs_find_dirt_with_cost()
 
 if result is not None:
-    path_to_dirt, cost, path = result
-    follow_path(path_to_dirt)
-    print(cost)
-    print(path)
+    path, cost = result
+    follow_path(path)
+    print(f"The cost to dirt: {cost}")
+    print(f"The path to dirt: {path}")
     print("Dirt cleaned!")
 
     initial_board = get_board_solution()
 
-    save_solution(path_to_dirt, cost, initial_board)
+    save_solution(path, cost, initial_board)
 
 else:
     print("The vacuum can't go to the dirt, because of obstacles.")
