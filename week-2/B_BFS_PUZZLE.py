@@ -167,7 +167,6 @@ def save_solution(initial_board, solution_state, total_moves_explored):
 
 
 # Main function that puts everything together
-# Main function that puts everything together
 def main():
     # Get a random puzzle and initialize the board
     start_board = get_random_puzzle()
