@@ -105,21 +105,6 @@ class EnhancedPuzzleSolver:
 
         return possible_moves
 
-    def make_move(self, puzzle, from_pos, to_pos):
-        """Create a new puzzle state by swapping the empty space with an adjacent tile.
-
-        Returns a new puzzle state without modifying the original puzzle.
-        """
-        # Create a deep copy of the puzzle to avoid modifying the original
-        new_puzzle = [row[:] for row in puzzle]
-
-        # Swap the positions of the empty space and the adjacent tile
-        new_puzzle[from_pos[0]][from_pos[1]], new_puzzle[to_pos[0]][to_pos[1]] = \
-            new_puzzle[to_pos[0]][to_pos[1]], new_puzzle[from_pos[0]][from_pos[1]]
-
-        return new_puzzle
-
-
 def solve_and_display():
     """Main function to solve and display the puzzle solution."""
     # Create an instance of the puzzle solver
