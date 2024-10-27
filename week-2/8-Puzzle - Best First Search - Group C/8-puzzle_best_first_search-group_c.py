@@ -62,7 +62,7 @@ def best_first_search(start_puzzle):
                 new_empty_pos = [(i, j) for i in range(3) for j in range(3) if neighbor[i][j] == 0][0]
                 new_path = path + [new_empty_pos]
                 heapq.heappush(priority_queue, (
-                manhattan(neighbor), cost + 1, neighbor, new_path, complete_puzzle_path + [current_puzzle]))
+                    manhattan(neighbor), cost + 1, neighbor, new_path, complete_puzzle_path + [current_puzzle]))
 
     return None, -1, None
 
@@ -112,12 +112,21 @@ def visualize_solution(initial_puzzle):
         print(f"Board crashed with error: {e}")
 
 
-if __name__ == "__main__":
-    initial_puzzle = get_random_puzzle()
-    invCount = getInvCount(initial_puzzle)
+def get_solvable_puzzle():
+    puzzle = get_random_puzzle()
+    invCount = getInvCount(puzzle)
     if invCount % 2 != 0:
-        print("This puzzle is not solvable\nThe board has an odd number of inversions:", invCount)
-        exit()
+        print("Unsolvable puzzle with", invCount, " inversions, generating new puzzle...")
+        time.sleep(1)
+        return get_solvable_puzzle()
+    else:
+        print("Found a solvable puzzle with", invCount, " inversions.")
+        return puzzle
+
+
+if __name__ == "__main__":
+    initial_puzzle = get_solvable_puzzle()
+    print("Initial puzzle state:", initial_puzzle)
     solution_path, total_cost, boards = best_first_search(initial_puzzle)
     if solution_path:
         save_solution_to_file(boards, total_cost)
