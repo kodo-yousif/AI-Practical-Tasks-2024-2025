@@ -36,3 +36,4 @@ while True:
 
     print(board_array)
     is_moved = not is_moved
+    
