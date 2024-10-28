@@ -129,7 +129,7 @@ def solve_and_display():
     try:
         # Print and write the starting puzzle state to a file
         print("\nStarting puzzle state:")
-        with open("solution.txt", "w") as f:
+        with open("../solution.txt", "w") as f:
             # Write the puzzle state to the file
             for row in solvable_puzzle:
                 puzzle_row = " ".join(map(str, row))
@@ -142,7 +142,7 @@ def solve_and_display():
 
         if solution:
             print(f"\nFound solution in {len(solution)} moves!")
-            with open("solution.txt", "a") as f:
+            with open("../solution.txt", "a") as f:
                 # Apply each move in the solution
                 for move in solution:
                     time.sleep(0.25)  # Slight delay for display purposes
