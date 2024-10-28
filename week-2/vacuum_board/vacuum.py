@@ -7,14 +7,12 @@ from vacuum_board.Tiles import Tiles
 GameBoard=[[1 for _ in range(6)] for _ in range(6)]
 vacuumTilePosI=0 
 vacuumTilePosJ=0
-
 dirtTilePosI=0 
 dirtTilePosJ=0
 
 init_board = [[1 for _ in range(6)] for _ in range(6)]
 
 puzzle = init_board
-
 
 def get_random_board(vacuum = False, dirt = False, obstacles = False ):
 
@@ -115,8 +113,7 @@ def board():
 
 		pygame.display.update()
 
-		clock.tick(30); 
-
+		clock.tick(30);
 
 def move_to(place):
 	global GameBoard, vacuumTilePosI, vacuumTilePosJ
@@ -141,7 +138,7 @@ def move_to(place):
 		print("Error: Cant go out of the board.")
 		return get_board()
 
-	if GameBoard[tempI][tempJ].number == 5:
+	if GameBoard[tempI][tempJ].number == 6:
 		print("Error: Cant go to a blocked tile.")
 
 	GameBoard[tempI][tempJ].im_vacuum()
@@ -152,7 +149,6 @@ def move_to(place):
 
 
 	return get_board()
-
 
 def get_dirt_pos():
 	return [dirtTilePosI, dirtTilePosJ]
@@ -170,3 +166,35 @@ def get_board():
 			array_6x6[i][j] = GameBoard[i][j].number
     
 	return array_6x6
+
+def get_obstacle_pos():
+    global GameBoard
+    obstacles = []
+
+    for i in range(6):
+        for j in range(6):
+            if GameBoard[i][j].number == 0:
+                obstacles.append((i, j))
+
+    return obstacles
+
+def get_board_for_save():
+	global GameBoard
+	board_representation = ""
+
+	for i in range(6):
+		for j in range(6):
+			tile_value = GameBoard[i][j].number
+
+			if tile_value == 1:
+				board_representation += "[ ] "  # Empty tile
+			elif tile_value == 0:
+				board_representation += "[#] "  # Obstacle
+			elif tile_value == 5:
+				board_representation += "[D] "  # Dirt
+			elif tile_value == 10:
+				board_representation += "[V] "  # Vacuum
+
+		board_representation += "\n"
+
+	return board_representation
