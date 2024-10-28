@@ -1,0 +1,9 @@
+Initial Board State:
+10 0 1 1 1 1
+0 5 1 1 1 1
+1 1 1 1 1 1
+1 1 1 1 1 1
+1 1 1 1 1 1
+1 1 1 1 1 1
+
+No solution found: Obstacles block the path.
