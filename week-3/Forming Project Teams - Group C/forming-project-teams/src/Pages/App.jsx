@@ -5,12 +5,20 @@ import {
     ConfigProvider,
     Form,
     InputNumber,
-    Layout,
+    Layout, message,
     Row,
-    Statistic, Switch,
+    Statistic, Steps, Switch,
     Table, theme, Typography,
 } from 'antd';
-import {FieldNumberOutlined, MoonFilled, NumberOutlined, SendOutlined, SunFilled} from '@ant-design/icons';
+import {
+    CheckCircleFilled,
+    ContactsFilled,
+    FieldNumberOutlined,
+    MoonFilled,
+    NumberOutlined,
+    SendOutlined,
+    SunFilled
+} from '@ant-design/icons';
 import {useAxiosGet} from "../Configs/Axios.jsx";
 import {useState} from "react";
 
@@ -33,9 +41,17 @@ function App() {
     const [data, setData] = useState([]);
     const [columns, setColumns] = useState([]);
     const [darkMode, setDarkMode] = useState(false);
-    const [colorPrimary, setColorPrimary] = useState('#97BC62FF')
+    const [colorPrimary, setColorPrimary] = useState('#F18440')
+    const [current, setCurrent] = useState(0);
     
     const onFinish = async (values) => {
+        if (values?.n === 0 || values?.k === 0) {
+            message.open({
+                type: 'error',
+                content: 'Please Enter A Valid Number',
+            });
+            return;
+        }
         await getTeamsRequest({
             n: values.n,
             k: values.k
@@ -44,6 +60,11 @@ function App() {
             setColumns(response.columns);
         });
         
+        if (getTeamsLoading === false) {
+            if (current === 2) {
+                setCurrent(3);
+            }
+        }
     }
     
     return (
@@ -53,6 +74,8 @@ function App() {
                     algorithm: darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
                     token: {
                         colorPrimary: colorPrimary,
+                        colorText: colorPrimary,
+                        colorTextHeading: 'white',
                     },
                 }}
             >
@@ -79,15 +102,31 @@ function App() {
                                     justifyContent: 'flex-start'
                                 }}
                                 span = {12}>
-                                <Typography.Title
-                                    level = {3}
+                                <Row
                                     style = {{
-                                        margin: 0,
-                                        fontWeight: "bolder"
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: 'space-between',
                                     }}
                                 >
-                                    Forming Project Teams
-                                </Typography.Title>
+                                    <ContactsFilled
+                                        twoToneColor = {colorPrimary}
+                                        style = {{
+                                            fontSize: 44,
+                                            color: 'white',
+                                            marginRight: '10px'
+                                        }}/>
+                                    <Typography.Title
+                                        level = {3}
+                                        style = {{
+                                            margin: 0,
+                                            fontWeight: "bolder"
+                                        }}
+                                    >
+                                        Forming Project Teams
+                                    </Typography.Title>
+                                </Row>
+                            
                             </Col>
                             <Col
                                 style = {{
@@ -98,9 +137,9 @@ function App() {
                                 span = {12}>
                                 <Switch
                                     checkedChildren = {<MoonFilled/>}
-                                    unCheckedChildren = {<SunFilled/>}
+                                    unCheckedChildren = {<SunFilled spin/>}
                                     onChange = {(value) => {
-                                        setColorPrimary(value ? '#2C5F2D' : '#97BC62FF')
+                                        setColorPrimary(value ? '#EE6611' : '#F18440')
                                         setDarkMode(value)
                                     }}
                                 />
@@ -128,6 +167,31 @@ function App() {
                                     10
                                 ]}>
                                     <Col span = {24}>
+                                        <Card>
+                                            <Steps
+                                                current = {current}
+                                                items = {[
+                                                    {
+                                                        title: 'Team Size',
+                                                        icon: <FieldNumberOutlined/>,
+                                                    },
+                                                    {
+                                                        title: 'Employee Count',
+                                                        icon: <NumberOutlined/>,
+                                                    },
+                                                    {
+                                                        title: 'Submit',
+                                                        icon: <SendOutlined/>,
+                                                    },
+                                                    {
+                                                        title: 'Done',
+                                                        icon: <CheckCircleFilled/>,
+                                                    },
+                                                ]}
+                                            />
+                                        </Card>
+                                    </Col>
+                                    <Col span = {24}>
                                         <Row gutter = {[
                                             10,
                                             10
@@ -139,6 +203,18 @@ function App() {
                                                     }}
                                                     name = "n">
                                                     <InputNumber
+                                                        onChange = {(value) => {
+                                                            if (value > 0) {
+                                                                if (form.getFieldValue('k') > 0) {
+                                                                    setCurrent(2)
+                                                                } else {
+                                                                    setCurrent(1)
+                                                                }
+                                                            }
+                                                            if (value <= 0) {
+                                                                setCurrent(0)
+                                                            }
+                                                        }}
                                                         min = {0}
                                                         size = {'large'}
                                                         changeOnWheel = {true}
@@ -155,6 +231,18 @@ function App() {
                                                     }}
                                                     name = "k">
                                                     <InputNumber
+                                                        onChange = {(value) => {
+                                                            if (value > 0 && form.getFieldValue('n') > 0) {
+                                                                setCurrent(2)
+                                                            }
+                                                            if (value <= 0) {
+                                                                if (form.getFieldValue('n') <= 0) {
+                                                                    setCurrent(0)
+                                                                } else {
+                                                                    setCurrent(1)
+                                                                }
+                                                            }
+                                                        }}
                                                         min = {0}
                                                         size = {'large'}
                                                         changeOnWheel = {true}
@@ -208,14 +296,15 @@ function App() {
                         color: 'white',
                         textAlign: 'center'
                     }}>
-                        <Typography.Text
+                        <Typography.Title
+                            level = {5}
                             style = {{
                                 margin: 0,
                                 fontWeight: "bolder"
                             }}
                         >
-                            Copyright © 2004 - 2024 Something®. All rights reserved.
-                        </Typography.Text>
+                            Copyright© 2004 - 2024 Something®. All rights reserved.
+                        </Typography.Title>
                     </Footer>
                 </Layout>
             </ConfigProvider>
