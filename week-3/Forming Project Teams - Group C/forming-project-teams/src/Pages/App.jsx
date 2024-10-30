@@ -10,7 +10,7 @@ import {
     Statistic, Switch,
     Table, theme, Typography,
 } from 'antd';
-import {FieldNumberOutlined, NumberOutlined, SendOutlined} from '@ant-design/icons';
+import {FieldNumberOutlined, MoonFilled, NumberOutlined, SendOutlined, SunFilled} from '@ant-design/icons';
 import {useAxiosGet} from "../Configs/Axios.jsx";
 import {useState} from "react";
 
@@ -33,14 +33,13 @@ function App() {
     const [data, setData] = useState([]);
     const [columns, setColumns] = useState([]);
     const [darkMode, setDarkMode] = useState(false);
+    const [colorPrimary, setColorPrimary] = useState('#97BC62FF')
     
     const onFinish = async (values) => {
-        console.log('values', values);
         await getTeamsRequest({
             n: values.n,
             k: values.k
         }).then((response) => {
-            console.log('response', response);
             setData(response.binomial_table);
             setColumns(response.columns);
         });
@@ -51,7 +50,10 @@ function App() {
         <>
             <ConfigProvider
                 theme = {{
-                    algorithm: darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm
+                    algorithm: darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
+                    token: {
+                        colorPrimary: colorPrimary,
+                    },
                 }}
             >
                 <Layout style = {{
@@ -61,7 +63,7 @@ function App() {
                     flexDirection: 'column'
                 }}>
                     <Header style = {{
-                        backgroundColor: '#1890FF',
+                        backgroundColor: colorPrimary,
                         display: "flex",
                         alignItems: 'center'
                     }}>
@@ -84,7 +86,7 @@ function App() {
                                         fontWeight: "bolder"
                                     }}
                                 >
-                                    Teams Size Finder
+                                    Forming Project Teams
                                 </Typography.Title>
                             </Col>
                             <Col
@@ -95,7 +97,10 @@ function App() {
                                 }}
                                 span = {12}>
                                 <Switch
+                                    checkedChildren = {<MoonFilled/>}
+                                    unCheckedChildren = {<SunFilled/>}
                                     onChange = {(value) => {
+                                        setColorPrimary(value ? '#2C5F2D' : '#97BC62FF')
                                         setDarkMode(value)
                                     }}
                                 />
@@ -134,6 +139,8 @@ function App() {
                                                     }}
                                                     name = "n">
                                                     <InputNumber
+                                                        min = {0}
+                                                        size = {'large'}
                                                         changeOnWheel = {true}
                                                         style = {{width: '100%'}}
                                                         placeholder = "Please Enter The Team Size"
@@ -148,6 +155,8 @@ function App() {
                                                     }}
                                                     name = "k">
                                                     <InputNumber
+                                                        min = {0}
+                                                        size = {'large'}
                                                         changeOnWheel = {true}
                                                         style = {{width: '100%'}}
                                                         placeholder = "Please Enter Number Of Employees"
@@ -157,6 +166,7 @@ function App() {
                                             </Col>
                                             <Col span = {4}>
                                                 <Button
+                                                    size = {'large'}
                                                     block
                                                     type = 'primary'
                                                     htmlType = 'submit'
@@ -169,11 +179,11 @@ function App() {
                                     <Col span = {24}>
                                         <Card>
                                             <Statistic
-                                                title = "Size of Team"
+                                                title = "Possible Combination Of Teams"
                                                 value = {teamsData ? teamsData.total_teams : 0}
                                                 precision = {0}
                                                 valueStyle = {{
-                                                    color: '#3F8600',
+                                                    color: colorPrimary,
                                                 }}
                                                 prefix = {<NumberOutlined/>}
                                             />
@@ -194,10 +204,19 @@ function App() {
                         </Form>
                     </Content>
                     <Footer style = {{
-                        backgroundColor: '#1890FF',
+                        backgroundColor: colorPrimary,
                         color: 'white',
                         textAlign: 'center'
-                    }}>Footer</Footer>
+                    }}>
+                        <Typography.Text
+                            style = {{
+                                margin: 0,
+                                fontWeight: "bolder"
+                            }}
+                        >
+                            Copyright © 2004 - 2024 Something®. All rights reserved.
+                        </Typography.Text>
+                    </Footer>
                 </Layout>
             </ConfigProvider>
         </>
