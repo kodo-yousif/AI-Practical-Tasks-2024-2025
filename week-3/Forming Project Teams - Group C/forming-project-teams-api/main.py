@@ -36,11 +36,11 @@ async def calculate_teams(n: int, k: int):
 
     binomial_table = [
         {"key": i, **{f"col_{j}": comb(i, j) for j in range(i + 1)}}
-        for i in range(n)
+        for i in range(n + 1)
     ]
 
     columns = [{"title": f"Col {j}", "dataIndex": f"col_{j}", "key": f"col_{j}", "align": "center"}
-               for j in range(n)]
+               for j in range(n + 1)]
 
     return {
         "total_teams": total_teams,
