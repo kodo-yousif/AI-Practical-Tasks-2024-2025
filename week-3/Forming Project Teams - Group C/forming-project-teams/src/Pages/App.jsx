@@ -76,13 +76,6 @@ function App() {
                         colorPrimary: colorPrimary,
                         colorText: colorPrimary,
                         colorTextHeading: 'white',
-                    },
-                    components: {
-                        Segmented: {
-                            trackPadding: '5px',
-                            itemHoverBg: 'transparent',
-                            itemActiveBg: 'transparent',
-                        }
                     }
                 }}
             >
