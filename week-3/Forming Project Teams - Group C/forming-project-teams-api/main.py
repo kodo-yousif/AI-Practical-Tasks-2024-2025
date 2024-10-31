@@ -11,6 +11,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 def factorial(num):
     if num == 0 or num == 1:
         return 1
@@ -19,8 +20,10 @@ def factorial(num):
         result *= i
     return result
 
+
 def comb(n, k):
     return factorial(n) // (factorial(k) * factorial(n - k))
+
 
 @app.get("/teams/")
 async def calculate_teams(n: int, k: int):
@@ -33,17 +36,20 @@ async def calculate_teams(n: int, k: int):
 
     binomial_table = [
         {"key": i, **{f"col_{j}": comb(i, j) for j in range(i + 1)}}
-        for i in range(n + 1)
+        for i in range(n)
     ]
 
     columns = [{"title": f"Col {j}", "dataIndex": f"col_{j}", "key": f"col_{j}", "align": "center"}
-               for j in range(n + 1)]
+               for j in range(n)]
 
     return {
         "total_teams": total_teams,
         "binomial_table": binomial_table,
-        "columns": columns
+        "columns": columns,
+        "n": n,
+        "k": k
     }
+
 
 @app.get("/")
 async def root():

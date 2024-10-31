@@ -11,7 +11,7 @@ import {
     Table, theme, Typography,
 } from 'antd';
 import {
-    CheckCircleFilled,
+    CheckCircleOutlined,
     ContactsFilled,
     FieldNumberOutlined,
     MoonFilled,
@@ -48,7 +48,7 @@ function App() {
         if (values?.n === 0 || values?.k === 0) {
             message.open({
                 type: 'error',
-                content: 'Please Enter A Valid Number',
+                content: 'Please Enter A Valid Number, Both > 0',
             });
             return;
         }
@@ -77,6 +77,13 @@ function App() {
                         colorText: colorPrimary,
                         colorTextHeading: 'white',
                     },
+                    components: {
+                        Segmented: {
+                            trackPadding: '5px',
+                            itemHoverBg: 'transparent',
+                            itemActiveBg: 'transparent',
+                        }
+                    }
                 }}
             >
                 <Layout style = {{
@@ -155,7 +162,7 @@ function App() {
                                 display: 'flex',
                                 margin: '0',
                             }}
-                            onFinish = {onFinish} layout = 'vertical' form = {form}>
+                            onFinish = {onFinish} form = {form}>
                             <Card
                                 style = {{
                                     flex: 1
@@ -176,7 +183,7 @@ function App() {
                                                         icon: <FieldNumberOutlined/>,
                                                     },
                                                     {
-                                                        title: 'Employee Count',
+                                                        title: 'Group Size',
                                                         icon: <NumberOutlined/>,
                                                     },
                                                     {
@@ -185,7 +192,7 @@ function App() {
                                                     },
                                                     {
                                                         title: 'Done',
-                                                        icon: <CheckCircleFilled/>,
+                                                        icon: <CheckCircleOutlined/>,
                                                     },
                                                 ]}
                                             />
@@ -219,7 +226,7 @@ function App() {
                                                         size = {'large'}
                                                         changeOnWheel = {true}
                                                         style = {{width: '100%'}}
-                                                        placeholder = "Please Enter The Team Size"
+                                                        placeholder = "Enter The Entire Team Size"
                                                         prefix = {<FieldNumberOutlined/>}
                                                     />
                                                 </Form.Item>
@@ -247,7 +254,7 @@ function App() {
                                                         size = {'large'}
                                                         changeOnWheel = {true}
                                                         style = {{width: '100%'}}
-                                                        placeholder = "Please Enter Number Of Employees"
+                                                        placeholder = "Enter Group Size You Want To Form"
                                                         prefix = {<NumberOutlined/>}
                                                     />
                                                 </Form.Item>
@@ -267,7 +274,7 @@ function App() {
                                     <Col span = {24}>
                                         <Card>
                                             <Statistic
-                                                title = "Possible Combination Of Teams"
+                                                title = {teamsData && teamsData.n && teamsData.k ? `Possible Combination Of Teams To Form Using ${teamsData.k} People Out Of ${teamsData.n}` : 'Possible Combination Of Teams'}
                                                 value = {teamsData ? teamsData.total_teams : 0}
                                                 precision = {0}
                                                 valueStyle = {{
