@@ -1,6 +1,5 @@
 import threading
 import time
-import random
 from vacuum_board.vacuum import (board, set_board, get_board, get_dirt_pos, get_vacuum_pos, move_to)
 
 # we are initializing the board on the separate thread because (pygame)
@@ -64,6 +63,8 @@ def bfs_search():
                 new_pos not in visited
             ):
                 visited.add(new_pos)
+                # if it was not queue we would used push or prepend
+                # we are adding to the the end APPEND and getting from the start POP
                 queue.append((new_pos, path + [move_name], cost + move_cost))
 
     return None, None  # if No solution found so return this
