@@ -76,7 +76,6 @@ def main():
         
     path, total_cost = bfs_search()
 
-    
     if path is None:
         write_solution([], 0, "No solution found: Obstacles block the path.")
         print("No solution found: Obstacles block the path.")
