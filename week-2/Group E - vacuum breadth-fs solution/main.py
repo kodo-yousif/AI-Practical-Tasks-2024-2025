@@ -70,22 +70,8 @@ def bfs_search():
 
 
 def main():
-
-    vacuum_place = random.randint(0, 35)
-    dirt_place = random.randint(0, 35)
-
-    while dirt_place == vacuum_place:
-        dirt_place = random.randint(0, 35)
-
-    result = []
-    while len(result) < 5:
-        rand_num = random.randint(0, 35)
-        if rand_num != vacuum_place and rand_num != dirt_place:
-            result.append(rand_num)
-
-    # to test the no solution state
-    # set_board([0, 7, [1,6]]) 
-    set_board([vacuum_place, dirt_place, result])
+    
+    set_board()
     initialize_board()        
         
     path, total_cost = bfs_search()

@@ -45,6 +45,7 @@ def get_random_board(vacuum = False, dirt = False, obstacles = False ):
 
 
 # initializes the game board
+# random_board = [0, 7, [1,6]] to test no solution state
 def set_board(random_board = get_random_board()):
     global puzzle, vacuumTilePosI, vacuumTilePosJ, dirtTilePosI, dirtTilePosJ
 
