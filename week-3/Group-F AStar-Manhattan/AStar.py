@@ -3,34 +3,37 @@ from tkinter import messagebox
 import heapq
 
 class Node:
-    def __init__(self, name, position, heuristic, connections):
+    def __init__(self, name, position, connections):
         self.name = name
         self.position = position
-        self.heuristic = heuristic
         self.connections = connections
         self.g_cost = float('inf')
         self.f_cost = float('inf')
         self.parent = None
 
+    def get_heuristic(self, goal_position):
+        return manhattan_distance(self.position, goal_position)
+
     def __lt__(self, other):
         return self.f_cost < other.f_cost
+
 
 def manhattan_distance(pos1, pos2):
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 nodes = {
-    "S": Node("S", (0, 0), 10, ["Z", "A", "B"]),
-    "Z": Node("Z", (0, 5), 8, ["G", "B", "S"]),
-    "B": Node("B", (1, 2), 7, ["Z", "D", "S"]),
-    "A": Node("A", (2, 0), 5, ["M", "S"]),
-    "M": Node("M", (3, 3), 4, ["G", "A"]),
-    "D": Node("D", (4, 2), 6, ["G", "B"]),
-    "G": Node("G", (5, 5), 4, ["Z", "M", "D"]),
+    "S": Node("S", (0, 0),  ["Z", "A", "B"]),
+    "Z": Node("Z", (0, 5),  ["G", "B", "S"]),
+    "B": Node("B", (1, 2),  ["Z", "D", "S"]),
+    "A": Node("A", (2, 0),  ["M", "S"]),
+    "M": Node("M", (3, 3),  ["G", "A"]),
+    "D": Node("D", (4, 2),  ["G", "B"]),
+    "G": Node("G", (5, 5),  ["Z", "M", "D"]),
 }
 
 def a_star(start_node, goal_node):
     start_node.g_cost = 0
-    start_node.f_cost = start_node.heuristic
+    start_node.f_cost = start_node.get_heuristic(goal_node.position)  # Use dynamic heuristic
     open_list = []
     heapq.heappush(open_list, (start_node.f_cost, start_node))
     closed_set = set()
@@ -55,7 +58,7 @@ def a_star(start_node, goal_node):
             tentative_g_cost = current_node.g_cost + manhattan_distance(current_node.position, neighbor.position)
             if tentative_g_cost < neighbor.g_cost:
                 neighbor.g_cost = tentative_g_cost
-                neighbor.f_cost = neighbor.g_cost + neighbor.heuristic
+                neighbor.f_cost = neighbor.g_cost + neighbor.get_heuristic(goal_node.position)
                 neighbor.parent = current_node
                 heapq.heappush(open_list, (neighbor.f_cost, neighbor))
 
@@ -89,7 +92,6 @@ class AStarGUI:
         self.reset_button = tk.Button(self.controls_frame, text="Reset", command=self.reset_nodes)
         self.reset_button.grid(row=3, column=0, columnspan=2, pady=5)
 
-        self.original_heuristics = {node.name: node.heuristic for node in nodes.values()}
         self.draw_grid()
         self.draw_nodes()
         self.draw_connections()
@@ -111,11 +113,13 @@ class AStarGUI:
                 self.canvas.create_text(mid_x, mid_y, text=str(distance), fill="blue", font=("Arial", 12))
 
     def draw_nodes(self):
+        goal_position = nodes[self.goal_node_var.get()].position if self.goal_node_var.get() in nodes else (0, 0)
         for node in nodes.values():
             x, y = node.position[1] * 50 + 25, node.position[0] * 50 + 25
             self.canvas.create_oval(x - 20, y - 20, x + 20, y + 20, fill="#F8EDE3", outline="black", width=1)
             self.canvas.create_text(x, y - 5, text=node.name, font=("Arial", 8, "bold"), fill="black")
-            self.canvas.create_text(x, y + 10, text=f"H:{node.heuristic}", font=("Arial", 8), fill="black")
+            heuristic = node.get_heuristic(goal_position)
+            self.canvas.create_text(x, y + 10, text=f"H:{heuristic}", font=("Arial", 8), fill="black")
 
     def show_path(self):
         start_node_name = self.start_node_var.get()
@@ -125,9 +129,7 @@ class AStarGUI:
             messagebox.showerror("Error", "Please select both start and goal nodes.")
             return
 
-        nodes[goal_node_name].heuristic = 0
         self.reset_nodes_data()
-
         self.canvas.delete("all")
         self.draw_grid()
         self.draw_nodes()
@@ -149,7 +151,6 @@ class AStarGUI:
             node.g_cost = float('inf')
             node.f_cost = float('inf')
             node.parent = None
-            node.heuristic = self.original_heuristics[node.name]
 
     def reset_nodes(self):
         self.start_node_var.set(None)
