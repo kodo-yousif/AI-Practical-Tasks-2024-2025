@@ -1,6 +1,9 @@
 import tkinter as tk
+from random import random
 from tkinter import messagebox
 import heapq
+
+from random import randint
 
 class Node:
     def __init__(self, name, position, connections):
@@ -12,10 +15,14 @@ class Node:
         self.parent = None
 
     def get_heuristic(self, goal_position):
-        return manhattan_distance(self.position, goal_position)
+        # Return zero if the node is the goal node; otherwise, return a random heuristic value
+        if self.position == goal_position:
+            return 0
+        return randint(1, 10)
 
     def __lt__(self, other):
         return self.f_cost < other.f_cost
+
 
 
 def manhattan_distance(pos1, pos2):
