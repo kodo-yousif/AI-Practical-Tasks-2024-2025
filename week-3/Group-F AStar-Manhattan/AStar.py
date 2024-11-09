@@ -1,5 +1,4 @@
 import tkinter as tk
-from random import random
 from tkinter import messagebox
 import heapq
 
@@ -15,7 +14,6 @@ class Node:
         self.parent = None
 
     def get_heuristic(self, goal_position):
-        # Return zero if the node is the goal node; otherwise, return a random heuristic value
         if self.position == goal_position:
             return 0
         return randint(1, 10)
@@ -23,24 +21,24 @@ class Node:
     def __lt__(self, other):
         return self.f_cost < other.f_cost
 
-
-
 def manhattan_distance(pos1, pos2):
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 nodes = {
     "S": Node("S", (0, 0),  ["Z", "A", "B"]),
-    "Z": Node("Z", (0, 5),  ["G", "B", "S"]),
-    "B": Node("B", (1, 2),  ["Z", "D", "S"]),
+    "Z": Node("Z", (0, 5),  ["B", "S", "V"]),
+    "B": Node("B", (1, 2),  ["Z", "D", "S", "R", "V"]),
     "A": Node("A", (2, 0),  ["M", "S"]),
     "M": Node("M", (3, 3),  ["G", "A"]),
     "D": Node("D", (4, 2),  ["G", "B"]),
-    "G": Node("G", (5, 5),  ["Z", "M", "D"]),
+    "R": Node("R", (4, 5),  ["G", "B"]),
+    "V": Node("V", (0, 3),  ["G", "B","Z"]),
+    "G": Node("G", (5, 5),  ["M","V", "D", "R"]),
 }
 
 def a_star(start_node, goal_node):
     start_node.g_cost = 0
-    start_node.f_cost = start_node.get_heuristic(goal_node.position)  # Use dynamic heuristic
+    start_node.f_cost = start_node.get_heuristic(goal_node.position)
     open_list = []
     heapq.heappush(open_list, (start_node.f_cost, start_node))
     closed_set = set()
@@ -69,7 +67,7 @@ def a_star(start_node, goal_node):
                 neighbor.parent = current_node
                 heapq.heappush(open_list, (neighbor.f_cost, neighbor))
 
-    return None, None
+    return None
 
 class AStarGUI:
     def __init__(self, root):
