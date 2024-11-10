@@ -1,0 +1,90 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+button {
+  padding: 10px;
+  margin: 20px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  border: none;
+  border-radius: 8px;
+  background-color: #1a1a1a;
+  color: white;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  min-width: 120px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-color: #646cff;
+}
+
+button:disabled {
+  background: linear-gradient(45deg, #2f2f2f, #3a3a3a);
+  cursor: not-allowed;
+  position: relative;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  box-shadow: none;
+  transform: none;
+}
+
+button:disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  pointer-events: none;
+}
+
+.App {
+  text-align: center;
+}
+
+/* Update styles for node selection */
+.react-flow__node {
+  cursor: pointer !important;
+}
+
+.react-flow__node:hover {
+  cursor: pointer !important;
+}
+
+.react-flow__node.selected {
+  border: 2px solid #FFD700 !important;
+  box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.3) !important;
+}
+
+/* Reset button specific style */
+button[style*="backgroundColor: '#D32F2F'"] {
+  background-color: #D32F2F !important;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+button[style*="backgroundColor: '#D32F2F'"]:hover {
+  background-color: #C62828 !important;
+  transform: translateY(-2px);
+}
+
+@keyframes pulseButton {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
