@@ -9,8 +9,7 @@ vacuumTilePosI=0
 vacuumTilePosJ=0
 dirtTilePosI=0 
 dirtTilePosJ=0
-init_board = [[1 for _ in range(6)] for _ in range(6)]
-puzzle = init_board
+puzzle = []
 
 # randomly generates 6x6 board 
 def get_random_board(vacuum = False, dirt = False, obstacles = False ):
@@ -45,6 +44,7 @@ def get_random_board(vacuum = False, dirt = False, obstacles = False ):
 
 
 # initializes the game board
+# random_board = [0, 7, [1,6]] to test no solution state
 def set_board(random_board = get_random_board()):
     global puzzle, vacuumTilePosI, vacuumTilePosJ, dirtTilePosI, dirtTilePosJ
 
@@ -85,7 +85,6 @@ def board():
     pygame.display.set_caption('Vacuum Board') # title of the displayed window
 
     tilePosX, tilePosY = 10, 10 
-
 
     for i in range(6):
         for j in range(6):
