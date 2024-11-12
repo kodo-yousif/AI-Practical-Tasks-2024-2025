@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*{
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+
+}
+
+html{
+  background-color: black;
+  color: white;
+}
+
+.container {
+  background-color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+}z
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+}
+
+.suggestion {
+  padding: 10px;
+  background: #f0f0f0;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+.lcs-table {
+  margin-top: 20px;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+td {
+  padding: 5px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+
+::-webkit-scrollbar{
+  background-color: white;
+  border-radius: 12px;
+  width: 8px; 
+  display:none;
+}
+
+::-webkit-scrollbar-thumb{
+  background: rgba(0, 0, 0, 0.53);
+  border-radius: 12px;
+  
+}
+
+.textInput{
+}

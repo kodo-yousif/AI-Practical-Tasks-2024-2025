@@ -1,0 +1,396 @@
+.visualization-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.visualization-container {
+  background-color: #1a1a1a;
+  color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90vw;
+  height: 90vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.visualization-content {
+  flex-grow: 1;
+  position: relative;
+  margin-bottom: 60px; /* Space for fixed navigation */
+  padding: 20px;
+}
+
+.flow-container {
+  width: 100%;
+  height: 100%;
+  background-color: #1a1a1a;
+  overflow: visible;
+}
+
+.step-node-content {
+  border: 1px solid #666;
+  border-radius: 8px;
+  padding: 16px;
+  width: 450px;
+  color: #000000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  margin: 8px;
+  position: relative;
+}
+
+.step-node-content:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6),
+              0 0 20px rgba(74, 158, 255, 0.3);
+  z-index: 10;
+}
+
+.step-header {
+  font-weight: bold;
+  color: #000000;
+  margin-bottom: 8px;
+  font-size: 1.2em;
+}
+
+.step-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 1em;
+}
+
+.current-node-info {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.node-values {
+  margin-top: 4px;
+  display: flex;
+  gap: 16px;
+  padding-left: 12px;
+  color: #666;
+}
+
+.neighbors-section {
+  border-left: 2px solid rgba(0, 0, 0, 0.1);
+  padding-left: 12px;
+  margin: 8px 0;
+}
+
+.neighbor-info {
+  padding: 4px 0;
+  font-size: 0.9em;
+}
+
+.better-path {
+  color: #4CAF50;
+  font-style: italic;
+  margin-left: 4px;
+}
+
+.lists-section {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+.lists-section > div {
+  margin: 4px 0;
+}
+
+.goal-reached {
+  color: #4CAF50;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 8px;
+  padding: 8px;
+  background-color: rgba(76, 175, 80, 0.1);
+  border-radius: 6px;
+}
+
+.fixed-navigation {
+  position: fixed;
+  bottom: 5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1a1a1a;
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.step-counter {
+  color: #8ab4f8;
+  font-weight: bold;
+}
+
+.output-container {
+  background-color: rgba(66, 165, 245, 0.2);
+  padding: 30px;
+  border-radius: 12px;
+  margin: 40px auto;
+  max-width: 800px;
+  box-shadow: 0 4px 6px rgba(66, 165, 245, 0.3);
+  border: 2px solid #42A5F5;
+}
+
+.output-container h3 {
+  color: #42A5F5;
+  margin-bottom: 20px;
+}
+
+.path-details {
+  margin-top: 20px;
+  font-size: 1.2em;
+  line-height: 1.6;
+  color: #fff;
+}
+
+.path-details p {
+  margin: 15px 0;
+}
+
+.path-details strong {
+  color: #64B5F6;
+}
+
+.nav-button {
+  padding: 10px 20px;
+  background-color: #4a4a4a;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.nav-button:hover:not(:disabled) {
+  background-color: #666;
+}
+
+.nav-button:disabled {
+  background-color: #333;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #fff;
+  z-index: 1;
+}
+
+h2 {
+  text-align: center;
+  color: #fff;
+  margin: 0 0 20px 0;
+}
+
+/* Status legend */
+.status-legend {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 5px;
+  z-index: 5;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin: 5px 0;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  border-radius: 3px;
+}
+
+/* Add styles for the edges */
+.react-flow__edge {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+  z-index: 1;
+}
+
+.react-flow__edge:hover {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
+}
+
+.react-flow__edge-path {
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* Ensure nodes appear above edges */
+.react-flow__node {
+  z-index: 2;
+}
+
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 15;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Adjust the ReactFlow controls position */
+.react-flow__controls {
+  bottom: 20px;
+  right: 20px;
+}
+
+/* Add styles for edge labels */
+.react-flow__edge-label {
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 11px;
+  opacity: 0.8;
+  filter: none;
+  box-shadow: none;
+}
+
+/* Remove hover effect on edge labels */
+.react-flow__edge:hover .react-flow__edge-label {
+  filter: none;
+  box-shadow: none;
+}
+
+/* Enhance the arrow markers */
+.react-flow__arrowhead {
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.3));
+}
+
+/* Update edge animation styles */
+.animated-edge {
+  stroke-dasharray: 10,5;
+  animation: dashdraw 1s linear infinite;
+}
+
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 15;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Make edges more visible */
+.react-flow__edge {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+  z-index: 1;
+}
+
+.react-flow__edge:hover {
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.8));
+}
+
+/* Enhance edge path */
+.react-flow__edge-path {
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+/* Add these new styles */
+.animated-path {
+  animation: dashAnimation 1s linear infinite;
+}
+
+@keyframes dashAnimation {
+  from {
+    stroke-dashoffset: 10;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Add a vertical line below each node */
+.step-node-content::after {
+  content: '';
+  position: absolute;
+  bottom: -200px;
+  left: 50%;
+  width: 2px;
+  height: 200px;
+  background: linear-gradient(to bottom, #fff, transparent);
+  pointer-events: none;
+}
+
+/* Update node spacing */
+.step-node-content {
+  margin-bottom: 100px;
+}
+
+/* Add these new styles */
+.current-node-section {
+  font-size: 1.2em;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.neighbors-section {
+  margin: 15px 0;
+}
+
+.neighbor-info {
+  margin: 15px 0;
+  padding-left: 15px;
+  border-left: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.neighbor-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.neighbor-calculations {
+  padding-left: 15px;
+  line-height: 1.6;
+  color: #444;
+}
+
+.lists-section {
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+
+.open-list, .closed-list {
+  margin: 8px 0;
+  line-height: 1.4;
+}
