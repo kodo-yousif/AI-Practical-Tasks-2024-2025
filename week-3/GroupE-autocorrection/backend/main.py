@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #Framework for building APIs quickly and easily in Python.
 from fastapi import FastAPI 
 
@@ -52,6 +53,49 @@ def get_suggestions(input_word: str) -> List[dict]:
     suggestions = []
     for word in word_list:
         # we are sending the input from user and the list of words in our words.py file
+=======
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from typing import List
+import difflib
+
+app = FastAPI()
+
+# Allow CORS for React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Sample word list (You can replace this with a larger list)
+word_list = [
+    "apple", "application", "apply", "ape", "apricot",
+    "banana", "bandana", "grape", "pineapple", "peach"
+]
+
+def lcs_similarity(input_word: str, suggestion: str) -> int:
+    """Calculate the Longest Common Subsequence (LCS) similarity."""
+    m, n = len(input_word), len(suggestion)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if input_word[i - 1] == suggestion[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1] + 1
+            else:
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
+
+    return dp[m][n]
+
+@app.get("/suggestions")
+def get_suggestions(input_word: str) -> List[dict]:
+    """Return top 5 word suggestions based on LCS similarity."""
+    suggestions = []
+    for word in word_list:
+>>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
         similarity = lcs_similarity(input_word, word)
         suggestions.append({"word": word, "similarity": similarity})
 
@@ -59,6 +103,7 @@ def get_suggestions(input_word: str) -> List[dict]:
     suggestions = sorted(suggestions, key=lambda x: -x["similarity"])[:5]
     return suggestions
 
+<<<<<<< HEAD
 
 # end point for generating lsc table
 @app.get("/lcs-table")
@@ -74,20 +119,36 @@ def get_lcs_table(input_word: str, chosen_word: str):
     arrows = [[""] * (n + 1) for _ in range(m + 1)]
 
 
+=======
+@app.get("/lcs-table")
+def get_lcs_table(input_word: str, chosen_word: str):
+    """Return LCS table data for visualization."""
+    m, n = len(input_word), len(chosen_word)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    arrows = [[""] * (n + 1) for _ in range(m + 1)]
+
+>>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
     # Fill the LCS table and arrows
     for i in range(1, m + 1):
         for j in range(1, n + 1):
             if input_word[i - 1] == chosen_word[j - 1]:
                 dp[i][j] = dp[i - 1][j - 1] + 1
+<<<<<<< HEAD
                 arrows[i][j] = "↖"  # character match
+=======
+                arrows[i][j] = "↖"  # Diagonal arrow
+>>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
             elif dp[i - 1][j] >= dp[i][j - 1]:
                 dp[i][j] = dp[i - 1][j]
                 arrows[i][j] = "↑"  # Up arrow
             else:
                 dp[i][j] = dp[i][j - 1]
                 arrows[i][j] = "←"  # Left arrow
+<<<<<<< HEAD
                 
                 # we select between up and left by which one has the maximum value
+=======
+>>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
 
     return {
         "table": dp,

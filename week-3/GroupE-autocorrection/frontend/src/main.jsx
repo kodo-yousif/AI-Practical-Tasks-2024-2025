@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+<<<<<<< HEAD
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { Toaster } from "react-hot-toast";
 
@@ -35,5 +36,11 @@ createRoot(document.getElementById('root')).render(
       <RouterProvider router={router} />
     </div>
 
+=======
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+>>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
   </StrictMode>,
 )

@@ -6,6 +6,7 @@
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+<<<<<<< HEAD
   scroll-behavior: smooth;
 
 }
@@ -21,13 +22,25 @@ html{
   align-items: center;
   justify-content: center;
   
+=======
+}
+
+.app {
+  padding: 20px;
+  max-width: 600px;
+  margin: auto;
+>>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
 }
 
 input {
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
+<<<<<<< HEAD
 }z
+=======
+}
+>>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
 
 .suggestions {
   display: flex;
@@ -46,6 +59,10 @@ input {
 }
 
 table {
+<<<<<<< HEAD
+=======
+  width: 100%;
+>>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
   border-collapse: collapse;
 }
 
@@ -54,6 +71,7 @@ td {
   border: 1px solid #ccc;
   text-align: center;
 }
+<<<<<<< HEAD
 
 
 ::-webkit-scrollbar{
@@ -71,3 +89,5 @@ td {
 
 .textInput{
 }
+=======
+>>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
