@@ -7,6 +7,9 @@
   margin: 0;
   box-sizing: border-box;
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
   scroll-behavior: smooth;
 
 }
@@ -22,6 +25,7 @@ html{
   align-items: center;
   justify-content: center;
   
+<<<<<<< HEAD
 =======
 }
 
@@ -30,6 +34,8 @@ html{
   max-width: 600px;
   margin: auto;
 >>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
+=======
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
 }
 
 input {
@@ -37,10 +43,14 @@ input {
   padding: 10px;
   margin-bottom: 10px;
 <<<<<<< HEAD
+<<<<<<< HEAD
 }z
 =======
 }
 >>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
+=======
+}z
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
 
 .suggestions {
   display: flex;
@@ -60,9 +70,12 @@ input {
 
 table {
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   width: 100%;
 >>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
+=======
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
   border-collapse: collapse;
 }
 
@@ -72,6 +85,9 @@ td {
   text-align: center;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
 
 
 ::-webkit-scrollbar{
@@ -88,6 +104,10 @@ td {
 }
 
 .textInput{
+<<<<<<< HEAD
 }
 =======
 >>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
+=======
+}
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))

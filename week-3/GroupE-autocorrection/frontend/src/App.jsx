@@ -1,13 +1,19 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
 import { useState, useRef } from 'react';
 import Suggestions from './components/custom/Suggestions';
 import Button from './components/custom/Button';
 import LscTable from './components/custom/LscTable';
 import Home from './components/custom/Home';
+<<<<<<< HEAD
 =======
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 >>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
+=======
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
 
 function App() {
   const [inputText, setInputText] = useState('');
@@ -15,6 +21,9 @@ function App() {
   const [selectedWord, setSelectedWord] = useState(null);
   const [lcsData, setLcsData] = useState(null);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
   const [showTable, setShowTable] = useState(false)
 
   const ref = useRef()
@@ -49,6 +58,7 @@ function App() {
 
 
       {showTable && lcsData ? <LscTable elementRef={ref} lcsData={lcsData} inputText={inputText} selectedWord={selectedWord} /> : ''}
+<<<<<<< HEAD
 =======
 
   useEffect(() => {
@@ -102,12 +112,18 @@ function App() {
         </div>
       )}
 >>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
+=======
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
     </div>
   );
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export default App;
 =======
 export default App;
 >>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
+=======
+export default App;
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))

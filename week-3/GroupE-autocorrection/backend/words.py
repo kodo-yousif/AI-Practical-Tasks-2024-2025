@@ -84,5 +84,9 @@ word_list = [
     "water", "milkshake", "smoothie", "lemonade", "icedtea",
     "whiskey", "vodka", "rum", "gin", "tequila",
     "wine", "beer", "cider", "champagne", "brandy",
+<<<<<<< HEAD
     "mojito", "margarita", "martini", "sangria", "pina_colada", "fake madrid",
+=======
+    "mojito", "margarita", "martini", "sangria", "pina_colada"
+>>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
 ]
