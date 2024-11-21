@@ -1,10 +1,7 @@
 <<<<<<< HEAD
-=======
-<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> fdab320 (-a)
->>>>>>> bd1ef6d (-a)
 #Framework for building APIs quickly and easily in Python.
 from fastapi import FastAPI 
 
@@ -65,6 +62,7 @@ def get_suggestions(input_word: str) -> List[dict]:
 =======
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+<<<<<<< HEAD
 =======
 >>>>>>> fdab320 (-a)
 from typing import List
@@ -119,7 +117,6 @@ def get_suggestions(input_word: str) -> List[dict]:
 =======
         # we are sending the input from user and the list of words in our words.py file
 >>>>>>> fdab320 (-a)
->>>>>>> bd1ef6d (-a)
         similarity = lcs_similarity(input_word, word)
         suggestions.append({"word": word, "similarity": similarity})
 
@@ -131,7 +128,6 @@ def get_suggestions(input_word: str) -> List[dict]:
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
->>>>>>> bd1ef6d (-a)
 
 # end point for generating lsc table
 @app.get("/lcs-table")
@@ -150,6 +146,7 @@ def get_lcs_table(input_word: str, chosen_word: str):
 <<<<<<< HEAD
 =======
 =======
+<<<<<<< HEAD
 =======
 
 # end point for generating lsc table
@@ -171,7 +168,6 @@ def get_lcs_table(input_word: str, chosen_word: str):
 =======
 
 >>>>>>> fdab320 (-a)
->>>>>>> bd1ef6d (-a)
     # Fill the LCS table and arrows
     for i in range(1, m + 1):
         for j in range(1, n + 1):
@@ -182,14 +178,17 @@ def get_lcs_table(input_word: str, chosen_word: str):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b47252c (-a)
                 arrows[i][j] = "↖"  # character match
 =======
                 arrows[i][j] = "↖"  # Diagonal arrow
 >>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
+<<<<<<< HEAD
 =======
                 arrows[i][j] = "↖"  # character match
 >>>>>>> fdab320 (-a)
->>>>>>> bd1ef6d (-a)
             elif dp[i - 1][j] >= dp[i][j - 1]:
                 dp[i][j] = dp[i - 1][j]
                 arrows[i][j] = "↑"  # Up arrow
@@ -202,15 +201,18 @@ def get_lcs_table(input_word: str, chosen_word: str):
 =======
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b47252c (-a)
                 
                 # we select between up and left by which one has the maximum value
 =======
 >>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
+<<<<<<< HEAD
 =======
                 
                 # we select between up and left by which one has the maximum value
 >>>>>>> fdab320 (-a)
->>>>>>> bd1ef6d (-a)
 
     return {
         "table": dp,

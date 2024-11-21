@@ -4,12 +4,18 @@ import './index.css'
 import App from './App.jsx'
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
 =======
 >>>>>>> fdab320 (-a)
+<<<<<<< HEAD
 >>>>>>> bd1ef6d (-a)
+=======
+=======
+>>>>>>> b47252c (-a)
+>>>>>>> c0a6709 (-a)
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { Toaster } from "react-hot-toast";
 
@@ -51,6 +57,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
 >>>>>>> ad973c8 (feat - setting up the basic frontend and backend stuff)
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 >>>>>>> 7db2bcd (Group E - Ahmed Adnan - Auto Correction/Completion (#27))
@@ -78,6 +85,11 @@ createRoot(document.getElementById('root')).render(
     </div>
 
 >>>>>>> fdab320 (-a)
+<<<<<<< HEAD
 >>>>>>> bd1ef6d (-a)
+=======
+=======
+>>>>>>> b47252c (-a)
+>>>>>>> c0a6709 (-a)
   </StrictMode>,
 )
