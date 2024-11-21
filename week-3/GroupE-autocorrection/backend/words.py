@@ -84,5 +84,5 @@ word_list = [
     "water", "milkshake", "smoothie", "lemonade", "icedtea",
     "whiskey", "vodka", "rum", "gin", "tequila",
     "wine", "beer", "cider", "champagne", "brandy",
-    "mojito", "margarita", "martini", "sangria", "pina_colada"
+    "mojito", "margarita", "martini", "sangria", "pina_colada", "fake madrid",
 ]
