@@ -56,11 +56,13 @@ function App() {
   // iterations: 50,
 
   const handleInputChange = (event) => {
+    setSimulationData(null)
     const { name, value } = event.target;
     setParams({ ...params, [name]: parseFloat(value) });
   };
 
   const handleStartSimulation = async () => {
+    setSimulationData(null)
     const API_BASE_URL = "http://127.0.0.1:8000";
 
     try {
@@ -87,7 +89,7 @@ function App() {
 
       <div className='w-[50%]  flex flex-col gap-y-8'>
         <h1 className='text-2xl font-semibold'>Output</h1>
-          {simulationData && <ParticleVisualization data={simulationData?.iterations} />}
+          {simulationData && <ParticleVisualization data={simulationData?.iterations} goal={params} />}
       </div>
     </div>
   );

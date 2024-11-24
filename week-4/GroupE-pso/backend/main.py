@@ -38,62 +38,78 @@ def calculate_pso(params):
 
 
     # randomly set positions and velocities for particles
-    particles = [
-        {
-            "position": {"x": random.uniform(0, 100), "y": random.uniform(0, 100)},
-            "velocity": {"x": random.uniform(-1, 1), "y": random.uniform(-1, 1)},
-            "best_position": None,
-            "best_fitness": float("inf")
+    particles = []
+    for _ in range(num_particles):
+        initial_position = {
+            "x": random.uniform(0, 100),
+            "y": random.uniform(0, 100)
         }
-        for _ in range(num_particles)
-    ]
+        
+        particles.append({
+            "position": initial_position.copy(),
+            "velocity": {
+                "x": random.uniform(-1, 1),
+                "y": random.uniform(-1, 1)
+            },
+            "best_position": initial_position.copy(),  # Initialize best_position with current position
+            "best_fitness": float("inf")
+        })
 
     global_best_position = None
     global_best_fitness = float("inf")
     iteration_data = []
 
+    # Initial fitness calculation and global best initialization
+    for particle in particles:
+        fitness = ((particle["position"]["x"] - goal_x) ** 2 + 
+                  (particle["position"]["y"] - goal_y) ** 2) ** 0.5
+        particle["best_fitness"] = fitness
+        
+        if fitness < global_best_fitness:
+            global_best_fitness = fitness
+            global_best_position = particle["position"].copy()
+
     # Run iterations
     for it in range(iterations):
         for particle in particles:
-            
-            # square root == ** 0.5
-            # Calculates the Euclidean distance between the particle's current position and the goal position (goal_x, goal_y).
-            # out fitness function is euclidean distance
-            fitness = ((particle["position"]["x"] - goal_x) ** 2 + (particle["position"]["y"] - goal_y) ** 2) ** 0.5
+            # Calculate current fitness
+            current_fitness = ((particle["position"]["x"] - goal_x) ** 2 + 
+                             (particle["position"]["y"] - goal_y) ** 2) ** 0.5
 
-            # Fitness: Smaller distances correspond to better fitness (closer to the goal).
-            if fitness < particle["best_fitness"]:
-                particle["best_fitness"] = fitness
+            # Update personal best if current position is better
+            if current_fitness < particle["best_fitness"]:
+                particle["best_fitness"] = current_fitness
                 particle["best_position"] = particle["position"].copy()
 
-            # Update global best
-            if fitness < global_best_fitness:
-                global_best_fitness = fitness
+            # Update global best if current position is better
+            if current_fitness < global_best_fitness:
+                global_best_fitness = current_fitness
                 global_best_position = particle["position"].copy()
 
-            # Vnew​=(inertia * Vcurrent)+(cognitive_coeff * r1 * (Pbest − Pcurrent))+(social_coeff * r2​*(Gbest − Pcurrent))
+            # Update velocity
+            r1, r2 = random.random(), random.random()
             
-            # Update velocity and position
             particle["velocity"]["x"] = (
                 inertia * particle["velocity"]["x"] +
-                cognitive_coeff * random.random() * (particle["best_position"]["x"] - particle["position"]["x"]) +
-                social_coeff * random.random() * (global_best_position["x"] - particle["position"]["x"])
+                cognitive_coeff * r1 * (particle["best_position"]["x"] - particle["position"]["x"]) +
+                social_coeff * r2 * (global_best_position["x"] - particle["position"]["x"])
             )
             
             particle["velocity"]["y"] = (
                 inertia * particle["velocity"]["y"] +
-                cognitive_coeff * random.random() * (particle["best_position"]["y"] - particle["position"]["y"]) +
-                social_coeff * random.random() * (global_best_position["y"] - particle["position"]["y"])
+                cognitive_coeff * r1 * (particle["best_position"]["y"] - particle["position"]["y"]) +
+                social_coeff * r2 * (global_best_position["y"] - particle["position"]["y"])
             )
-            
+
+            # Update position
             particle["position"]["x"] += particle["velocity"]["x"]
             particle["position"]["y"] += particle["velocity"]["y"]
 
         # Save iteration data
         iteration_data.append({
             "iteration": it,
-            "particles": [{"position": p["position"], "fitness": p["best_fitness"]} for p in particles],
-            "global_best": {"position": global_best_position, "fitness": global_best_fitness}
+            "particles": [{"position": p["position"].copy(), "fitness": p["best_fitness"]} for p in particles],
+            "global_best": {"position": global_best_position.copy(), "fitness": global_best_fitness}
         })
 
     return {
@@ -101,7 +117,6 @@ def calculate_pso(params):
         "best_fitness": global_best_fitness,
         "iterations": iteration_data
     }
-
 
 @app.post("/pso")
 async def pso_endpoint(request: PSORequest):

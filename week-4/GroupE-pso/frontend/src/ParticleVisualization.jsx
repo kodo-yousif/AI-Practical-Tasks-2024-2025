@@ -1,14 +1,59 @@
 import { useRef, useEffect, useState } from 'react';
 
-function ParticleVisualization({ data }) {
+function ParticleVisualization({ data, goal }) {
     const canvasRef = useRef(null);
     const [generationIndex, setGenerationIndex] = useState(0);
     const [speed, setSpeed] = useState(1);
-
-    const [zoom, setZoom] = useState(1);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
     const canvasWidth = 700;
-    const canvasHeight = 400;
+    const canvasHeight = 500;
+    const {goal_x, goal_y} = goal
+
+    // Calculate bounds for all particles
+    const calculateBounds = () => {
+        let minX = Infinity, minY = Infinity;
+        let maxX = -Infinity, maxY = -Infinity;
+
+        data.forEach((generation) => {
+            generation.particles.forEach((particle) => {
+                minX = Math.min(minX, particle.position.x);
+                minY = Math.min(minY, particle.position.y);
+                maxX = Math.max(maxX, particle.position.x);
+                maxY = Math.max(maxY, particle.position.y);
+            });
+        });
+
+        return { minX, minY, maxX, maxY };
+    };
+
+    const calculateInitialZoom = () => {
+        const { minX, minY, maxX, maxY } = calculateBounds();
+        const contentWidth = (maxX - minX) * 10;  
+        const contentHeight = (maxY - minY) * 10;
+
+        // Calculate zoom to fit the content with some padding
+        const horizontalZoom = (canvasWidth * 0.8) / contentWidth;
+        const verticalZoom = (canvasHeight * 0.8) / contentHeight;
+
+        return Math.min(horizontalZoom, verticalZoom, 1); 
+    };
+
+    const [zoom, setZoom] = useState(() => calculateInitialZoom());
+    const [offset, setOffset] = useState(() => {
+        const bounds = calculateBounds();
+        const centerX = ((bounds.maxX + bounds.minX) / 2) * 10;
+        const centerY = ((bounds.maxY + bounds.minY) / 2) * 10;
+        return {
+            x: canvasWidth / 2 - centerX,
+            y: canvasHeight / 2 - centerY
+        };
+    });
+
+    const { minX, minY, maxX, maxY } = calculateBounds();
+
+    const scaleFactor = Math.min(
+        (canvasWidth * 0.8) / (maxX - minX),
+        (canvasHeight * 0.8) / (maxY - minY)
+    ) * zoom;
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -22,9 +67,7 @@ function ParticleVisualization({ data }) {
             ctx.scale(zoom, zoom);
 
             const generationData = data[generationIndex];
-            const { global_best, particles } = generationData;
-
-            console.log("Particles:", particles);
+            let { global_best, particles } = generationData;
 
             // Draw the global best position
             ctx.fillStyle = "white";
@@ -33,6 +76,17 @@ function ParticleVisualization({ data }) {
                 global_best.position.x * 10 + canvas.width / 2,
                 global_best.position.y * 10 + canvas.height / 2,
                 15,
+                0,
+                2 * Math.PI
+            );
+            ctx.fill();
+
+            ctx.fillStyle = "orange";
+            ctx.beginPath();
+            ctx.arc(
+                goal_x * 10 + canvas.width / 2,
+                goal_y * 10 + canvas.height / 2,
+                25,
                 0,
                 2 * Math.PI
             );
@@ -59,7 +113,6 @@ function ParticleVisualization({ data }) {
         drawParticles();
     }, [generationIndex, data, zoom, offset]);
 
-
     useEffect(() => {
         const interval = setInterval(() => {
             setGenerationIndex((prev) => {
@@ -75,54 +128,40 @@ function ParticleVisualization({ data }) {
         return () => clearInterval(interval);
     }, [speed, data.length]);
 
-
-    // canvas logic
-    const calculateBounds = () => {
-        let minX = Infinity, minY = Infinity;
-        let maxX = -Infinity, maxY = -Infinity;
-
-        data.forEach((generation) => {
-            generation.particles.forEach((particle) => {
-                minX = Math.min(minX, particle.position.x);
-                minY = Math.min(minY, particle.position.y);
-                maxX = Math.max(maxX, particle.position.x);
-                maxY = Math.max(maxY, particle.position.y);
-            });
-        });
-
-        return { minX, minY, maxX, maxY };
-    };
-
-    const { minX, minY, maxX, maxY } = calculateBounds();
-
-    const scaleFactor = Math.min(
-        (canvasWidth * 0.8) / (maxX - minX),
-        (canvasHeight * 0.8) / (maxY - minY)
-    ) * zoom;
-
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-
 
     const handleWheel = (e) => {
         e.preventDefault();
         const zoomDelta = e.deltaY > 0 ? -0.1 : 0.1;
-        const newZoom = clamp(zoom + zoomDelta, 0.5, 5); // Clamp zoom between 0.5 and 5
+        const newZoom = clamp(zoom + zoomDelta, 0.1, 5); // Lowered minimum zoom to 0.1 for more zoom out capability
         setZoom(newZoom);
     };
 
     const handleMouseDown = (e) => {
         const rect = canvasRef.current.getBoundingClientRect();
-        const startX = e.clientX - rect.left - offset.x / scaleFactor;
-        const startY = e.clientY - rect.top - offset.y / scaleFactor;
+
+        // Starting position based on mouse click
+        const startX = e.clientX - rect.left - offset.x;
+        const startY = e.clientY - rect.top - offset.y;
 
         const handleMouseMove = (moveEvent) => {
-            const newOffsetX = moveEvent.clientX - rect.left - startX * scaleFactor;
-            const newOffsetY = moveEvent.clientY - rect.top - startY * scaleFactor;
+            // Calculate the new offset based on movement
+            const newOffsetX = moveEvent.clientX - rect.left - startX;
+            const newOffsetY = moveEvent.clientY - rect.top - startY;
 
-            setOffset({
-                x: clamp(newOffsetX, canvasWidth - scaleFactor * (maxX - minX), 0),
-                y: clamp(newOffsetY, canvasHeight - scaleFactor * (maxY - minY), 0),
-            });
+            // Update the offset, clamped to prevent dragging out of bounds
+            setOffset((prevOffset) => ({
+                x: clamp(
+                    newOffsetX,
+                    canvasWidth - scaleFactor * (maxX - minX),
+                    0
+                ),
+                y: clamp(
+                    newOffsetY,
+                    canvasHeight - scaleFactor * (maxY - minY),
+                    0
+                ),
+            }));
         };
 
         const handleMouseUp = () => {
@@ -134,13 +173,13 @@ function ParticleVisualization({ data }) {
         window.addEventListener("mouseup", handleMouseUp);
     };
 
-    return (
-        <div className="flex flex-col items-start  gap-y-3 ">
 
+    return (
+        <div className="flex flex-col items-start gap-y-3">
             <canvas
                 ref={canvasRef}
                 width={750}
-                height={400}
+                height={500}
                 style={{ display: 'block', cursor: 'pointer' }}
                 onWheel={handleWheel}
                 onMouseDown={handleMouseDown}
@@ -173,19 +212,6 @@ function ParticleVisualization({ data }) {
                     />
                 </div>
             </section>
-
-            {/* <div className='overflow-y-auto border-2 flex flex-col gap-y-2 border-[#5d5d5d] rounded-lg px-4 py-2 w-full h-[20vh]'>
-                <ul className='overflow-x-hidden overflow-y-auto'>
-                    {data[generationIndex].particles.map((particle, idx) => (
-                        <li key={idx} className='font-bold text-lg hover:text-orange-400'>
-                            Particle {idx + 1}: Fitness {particle.fitness.toFixed(2)}
-                        </li>
-                    ))}
-                </ul>
-            </div> */}
-
-
-
         </div>
     );
 }
