@@ -17,6 +17,7 @@ export const startSimulation = async (params) => {
 
 function App() {
   const [simulationData, setSimulationData] = useState(null);
+  console.log(simulationData)
 
   const [params, setParams] = useState({
     num_particles: 10,

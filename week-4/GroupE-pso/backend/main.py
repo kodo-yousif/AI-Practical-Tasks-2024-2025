@@ -1,9 +1,9 @@
 import random
 import math
+from typing import Dict, List, Any
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from fastapi.middleware.cors import CORSMiddleware
-
 # Pydantic is used for request validation.
 
 app = FastAPI()
@@ -27,7 +27,13 @@ class PSORequest(BaseModel):
     iterations: int = Field(gt=0, description="Iterations must be greater than 0")
 
 
-def calculate_pso(params):
+def calculate_fitness(position: Dict[str, float], goal_x: float, goal_y: float) -> float:
+    # Calculate Euclidean distance as fitness metric.
+    return ((position["x"] - goal_x) ** 2 + 
+            (position["y"] - goal_y) ** 2) ** 0.5
+    
+    
+def calculate_pso(params: Dict[str, Any]) -> Dict[str, Any]:
     num_particles = params["num_particles"]
     goal_x = params["goal_x"]
     goal_y = params["goal_y"]
@@ -35,9 +41,9 @@ def calculate_pso(params):
     social_coeff = params["social_coeff"]
     inertia = params["inertia"]
     iterations = params["iterations"]
+    max_velocity = params.get("max_velocity", 5.0)
 
 
-    # randomly set positions and velocities for particles
     particles = []
     for _ in range(num_particles):
         initial_position = {
@@ -48,10 +54,10 @@ def calculate_pso(params):
         particles.append({
             "position": initial_position.copy(),
             "velocity": {
-                "x": random.uniform(-1, 1),
-                "y": random.uniform(-1, 1)
+                "x": random.uniform(-max_velocity, max_velocity),
+                "y": random.uniform(-max_velocity, max_velocity)
             },
-            "best_position": initial_position.copy(),  # Initialize best_position with current position
+            "best_position": initial_position.copy(),
             "best_fitness": float("inf")
         })
 
@@ -59,36 +65,29 @@ def calculate_pso(params):
     global_best_fitness = float("inf")
     iteration_data = []
 
-    # Initial fitness calculation and global best initialization
-    for particle in particles:
-        fitness = ((particle["position"]["x"] - goal_x) ** 2 + 
-                  (particle["position"]["y"] - goal_y) ** 2) ** 0.5
-        particle["best_fitness"] = fitness
-        
-        if fitness < global_best_fitness:
-            global_best_fitness = fitness
-            global_best_position = particle["position"].copy()
-
-    # Run iterations
+    # Main optimization loop
     for it in range(iterations):
         for particle in particles:
-            # Calculate current fitness
-            current_fitness = ((particle["position"]["x"] - goal_x) ** 2 + 
-                             (particle["position"]["y"] - goal_y) ** 2) ** 0.5
 
-            # Update personal best if current position is better
+            current_fitness = calculate_fitness(particle["position"], goal_x, goal_y)
+
+            # Update personal and global best
             if current_fitness < particle["best_fitness"]:
                 particle["best_fitness"] = current_fitness
                 particle["best_position"] = particle["position"].copy()
 
-            # Update global best if current position is better
             if current_fitness < global_best_fitness:
                 global_best_fitness = current_fitness
                 global_best_position = particle["position"].copy()
 
-            # Update velocity
+            # Stopping criterion: exit if very close to goal
+            if global_best_fitness < 0.01:
+                break
+
+
             r1, r2 = random.random(), random.random()
             
+            # Update Velocity
             particle["velocity"]["x"] = (
                 inertia * particle["velocity"]["x"] +
                 cognitive_coeff * r1 * (particle["best_position"]["x"] - particle["position"]["x"]) +
@@ -111,6 +110,10 @@ def calculate_pso(params):
             "particles": [{"position": p["position"].copy(), "fitness": p["best_fitness"]} for p in particles],
             "global_best": {"position": global_best_position.copy(), "fitness": global_best_fitness}
         })
+
+        # Optional early stopping
+        if global_best_fitness < 0.01:
+            break
 
     return {
         "optimal_position": global_best_position,
