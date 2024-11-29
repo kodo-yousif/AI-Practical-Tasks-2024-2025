@@ -12,9 +12,8 @@ export const NumberButtons: React.FC<NumberButtonsProps> = ({
     const numbers = Array.from({length: 9}, (_, i) => i + 1);
 
     return (
-
         <div>
-            <div className = "flex gap-3 justify-between mt-2 w-fit">
+            <div className = "flex gap-2.5 justify-between mt-2 w-fit">
                 {numbers.map((number) => (<button
                     key = {number}
                     onClick = {() => onNumberSelect(number)}
