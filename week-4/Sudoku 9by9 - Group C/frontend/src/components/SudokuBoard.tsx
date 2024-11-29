@@ -16,7 +16,7 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({
   onCellClick,
 }) => {
   return (
-    <div className="grid grid-cols-9 gap-0.5 bg-gray-300 p-0.5">
+    <div className="grid grid-cols-9 gap-0 bg-gray-300 p-0.5">
       {board.map((row, rowIndex) =>
         row.map((cell, colIndex) => (
           <SudokuCell
@@ -27,6 +27,8 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = ({
               selectedCell?.row === rowIndex && selectedCell?.col === colIndex
             }
             onClick={() => onCellClick(rowIndex, colIndex)}
+            rowIndex={rowIndex}
+            colIndex={colIndex}
           />
         ))
       )}

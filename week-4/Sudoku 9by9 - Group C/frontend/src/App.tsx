@@ -89,7 +89,7 @@ function App() {
       });
 
       setGraphData(response.graph_data);
-      setHistory(response.history.slice(0, -1));
+      setHistory(response.history.slice(0, -1).reverse());
     } catch (error) {
       console.error('Error solving Sudoku:', error);
     } finally {
