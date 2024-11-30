@@ -30,7 +30,7 @@ export const SudokuCell: React.FC<SudokuCellProps> = ({
       className={clsx(
         'w-12 h-12 text-center border text-lg font-medium',
         'focus:outline-none transition-colors duration-200',
-        isSelected && !isOriginal && 'bg-blue-100 dark:bg-blue-800',
+        isSelected && !isOriginal && 'bg-blue-200 dark:bg-blue-800',
         isOriginal
           ? 'bg-gray-100 dark:bg-gray-700 font-bold cursor-not-allowed text-gray-900 dark:text-gray-100'
           : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200',

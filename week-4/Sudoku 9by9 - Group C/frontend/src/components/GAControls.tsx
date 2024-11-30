@@ -40,7 +40,7 @@ export const GAControls: React.FC<GAControlsProps> = ({
                                 type = "number"
                                 value = {populationSize}
                                 onChange = {(e) => onSettingsChange('populationSize', parseInt(e.target.value))}
-                                className = "w-full rounded-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-2"
+                                className = "w-full rounded-sm border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-2"
                             />
                         </div>
                     </div>
@@ -56,7 +56,7 @@ export const GAControls: React.FC<GAControlsProps> = ({
                                 type = "number"
                                 value = {generations}
                                 onChange = {(e) => onSettingsChange('generations', parseInt(e.target.value))}
-                                className = "w-full rounded-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-2"
+                                className = "w-full rounded-sm border-gray-400 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-2"
                             />
                         </div>
                     </div>
@@ -75,7 +75,7 @@ export const GAControls: React.FC<GAControlsProps> = ({
                                 value = {mutationRate}
                                 step = "0.01"
                                 onChange = {(e) => onSettingsChange('mutationRate', parseFloat(e.target.value))}
-                                className = "w-full rounded-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-2"
+                                className = "w-full rounded-sm border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-2"
                             />
                         </div>
                     </div>
@@ -91,7 +91,7 @@ export const GAControls: React.FC<GAControlsProps> = ({
                                 type = "number"
                                 value = {maxNoImprovement}
                                 onChange = {(e) => onSettingsChange('maxNoImprovement', parseInt(e.target.value))}
-                                className = "w-full rounded-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-2"
+                                className = "w-full rounded-sm border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 pl-2"
                             />
                         </div>
                     </div>
