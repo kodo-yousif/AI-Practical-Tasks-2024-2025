@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 class MagicSquareGA:
-    def __init__(self, population_size=30, generations=1000, mutation_rate=0.01):
+    def __init__(self, population_size=300, generations=1000, mutation_rate=2):
         self.population_size = population_size
         self.generations = generations
         self.mutation_rate = mutation_rate
@@ -132,12 +132,14 @@ class MagicSquareGUI:
                 row_labels.append(label)
             self.grid_labels.append(row_labels)
 
+        # Resize behavior
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         main_frame.columnconfigure(0, weight=1)
         main_frame.rowconfigure(1, weight=1)
 
     def run_ga(self):
+        # Disable the button to prevent multiple clicks
         self.run_button.config(state=tk.DISABLED)
         self.ga.evolve()
         self.listbox.delete(0, tk.END)
@@ -185,7 +187,6 @@ class MagicSquareGUI:
             row = i // 3
             col = i % 3
             self.grid_labels[row][col]['text'] = solution[i]
-
 
 if __name__ == "__main__":
     ga = MagicSquareGA()
