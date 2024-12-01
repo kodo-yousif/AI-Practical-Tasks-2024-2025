@@ -39,32 +39,15 @@ def create_chromosome(pieces):
     return chromosome
 
 def compare_edges(piece1, piece2, direction):
-    # print("Piece1", piece1)
-    # print("Piece2", piece2)
-    '''
 
-    Direction 'right':
-    If direction is 'right', we want to compare the right edge of piece1 with the left edge of piece2.
-    arr1[:, -1, :]: Extracts the rightmost column (edge) of piece1.
-    arr2[:, 0, :]: Extracts the leftmost column (edge) of piece2.
-    Direction 'bottom':
-    If direction is not 'right' (assumed to be 'bottom'), we compare the bottom edge of piece1 with the top edge of piece2.
-    arr1[-1, :, :]: Extracts the bottom row (edge) of piece1.
-    arr2[0, :, :]: Extracts the top row (edge) of piece2.
-    '''
 
     arr1, arr2 = np.array(piece1).astype(np.int16), np.array(piece2).astype(np.int16)
     edge1, edge2 = (arr1[:, -1, :], arr2[:, 0, :]) if direction == 'right' else (arr1[-1, :, :], arr2[0, :, :])
     return 1 - (np.mean(np.abs(edge1 - edge2)) / 255)
 
 def calculate_fitness(chromosome, pieces, original_sequence, grid_size=10):
-    # print("Chromosome", chromosome)
-    # print("pieces", pieces)
     fitness = 0
-    # original sequence
-    # sequence[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
     correct_positions = [chromosome[i] == original_sequence[i] for i in range(len(chromosome))]
-    # print("Correct positions", correct_positions)
     for i in range(grid_size):
         for j in range(grid_size):
             index = i * grid_size + j
@@ -72,9 +55,6 @@ def calculate_fitness(chromosome, pieces, original_sequence, grid_size=10):
                 fitness += compare_edges(pieces[chromosome[index]], pieces[chromosome[i * grid_size + (j + 1)]], 'right')
             if i < grid_size - 1:
                 fitness += compare_edges(pieces[chromosome[index]], pieces[chromosome[(i + 1) * grid_size + j]], 'bottom')
-    # print("Fitness", fitness)
-    # print("Sum correct positions", sum(correct_positions))
-    # print("correct positions", correct_positions)
 
     return fitness + sum(correct_positions) * 5, correct_positions
 
@@ -106,17 +86,12 @@ def genetic_algorithm(pieces, original_sequence, population_size=100, generation
     population = [create_chromosome(pieces) for _ in range(population_size)]
     print("Population", population)
     best_solutions, global_best_chromo, global_best_fitness, stagnation_counter = [], None, float('-inf'), 0
-    # print("Global best", global_best_chromo, global_best_fitness)
-    # print("best solutions", best_solutions)
 
     for generation in range(generations):
         fitness_results = [calculate_fitness(chromo, pieces, original_sequence, grid_size) for chromo in population]
-        # print("Fitness results", fitness_results)
 
         fitnesses = [result[0] for result in fitness_results]
         correct_counts = [sum(result[1]) for result in fitness_results]
-        # print("Correct counts", correct_counts)
-        # print("Fitnesses", fitnesses)
         best_index = np.argmax(fitnesses)
         if fitnesses[best_index] > global_best_fitness:
             global_best_chromo, global_best_fitness = population[best_index].copy(), fitnesses[best_index]
@@ -132,18 +107,11 @@ def genetic_algorithm(pieces, original_sequence, population_size=100, generation
             stagnation_counter = 0
 
         sorted_population = [chromosome for _, chromosome in sorted(zip(fitnesses, population), key=lambda x: x[0], reverse=True)]
-        # print("Sorted population", sorted_population)
         new_population = [chromosome.copy() for chromosome in sorted_population[:elite_count]]
-        # print("New population", new_population)
 
         while len(new_population) < population_size:
             parent1, parent2 = tournament_selection(population, fitnesses), tournament_selection(population, fitnesses)
-            # print("Parent1", parent1)
-            # print("Parent2", parent2)
-            # Parent1[15, 24, 22, 16, 18, 13, 5, 21, 0, 19, 6, 9, 12, 23, 10, 20, 11, 17, 3, 14, 8, 4, 2, 1, 7]
-            # Parent2[8, 22, 3, 20, 17, 24, 14, 12, 11, 13, 16, 0, 23, 21, 4, 15, 18, 10, 7, 19, 1, 2, 5, 6, 9]
             child = mutate(crossover(parent1, parent2), mutation_rate)
-            # print("Child", child)
             new_population.append(child)
         new_population[0] = global_best_chromo.copy()
         population = new_population
@@ -172,9 +140,6 @@ async def solve_puzzle(
     img = Image.open(BytesIO(image_data))
     pieces, original_sequence = split_image(img, grid_size)
     logger.info(f"Image split into {len(pieces)} pieces.")
-    # print("Image split into", len(pieces), "pieces.")
-    # print("sequence", original_sequence)
-    # print("pieces", pieces)
 
     best_solutions = genetic_algorithm(
         pieces, original_sequence, population_size, generations, mutation_rate, grid_size
