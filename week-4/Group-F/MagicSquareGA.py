@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 class MagicSquareGA:
-    def __init__(self, population_size=300, generations=1000, mutation_rate=2):
+    def __init__(self, population_size=200, generations=1000, mutation_rate=0.5):
         self.population_size = population_size
         self.generations = generations
         self.mutation_rate = mutation_rate
@@ -16,7 +16,6 @@ class MagicSquareGA:
         individual = self.numbers[:]
         random.shuffle(individual)
         return individual
-
 
     def create_population(self):
         self.population = [self.create_individual() for _ in range(self.population_size)]
@@ -45,17 +44,14 @@ class MagicSquareGA:
 
     def crossover(self, parent1, parent2):
         size = len(parent1)
-        child = [None]*size
+        child = [None] * size
 
-        start, end = sorted(random.sample(range(size), 2))
-        child[start:end] = parent1[start:end]
+        crossover_point = random.randint(0, size - 1)
 
-        fill_values = [item for item in parent2 if item not in child]
-        pointer = 0
-        for i in range(size):
-            if child[i] is None:
-                child[i] = fill_values[pointer]
-                pointer +=1
+        child[:crossover_point] = parent1[:crossover_point]
+
+        remaining_values = [item for item in parent2 if item not in child]
+        child[crossover_point:] = remaining_values
 
         return child
 
@@ -69,7 +65,6 @@ class MagicSquareGA:
         self.create_population()
 
         for generation in range(self.generations):
-            # Evaluate fitness and find the best individual
             fitness_scores = [(self.fitness(individual), individual) for individual in self.population]
             fitness_scores.sort(key=lambda x: x[0])
             best_fitness, best_individual = fitness_scores[0]
@@ -92,7 +87,6 @@ class MagicSquareGA:
                 next_generation.extend([child1, child2])
 
             self.population = next_generation[:self.population_size]
-
 
 class MagicSquareGUI:
     def __init__(self, master, ga):
@@ -132,34 +126,39 @@ class MagicSquareGUI:
                 row_labels.append(label)
             self.grid_labels.append(row_labels)
 
-        # Resize behavior
+
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(0, weight=1)
         main_frame.columnconfigure(0, weight=1)
         main_frame.rowconfigure(1, weight=1)
 
     def run_ga(self):
-        # Disable the button to prevent multiple clicks
+        self.ga.population = []
+        self.ga.best_solutions = []
+
         self.run_button.config(state=tk.DISABLED)
         self.ga.evolve()
         self.listbox.delete(0, tk.END)
 
         found_solution = False
+        solution_generation = None
 
         for solution in self.ga.best_solutions:
             self.listbox.insert(tk.END, f"Generation {solution['generation']}, Fitness: {solution['fitness']}")
             if solution['fitness'] == 0 and not found_solution:
                 self.display_solution(solution['individual'])
                 found_solution = True
+                solution_generation = solution['generation']
 
-        if not found_solution:
-            # Clear the grid if no perfect solution is found
+        if found_solution:
+            messagebox.showinfo("Solution Found", f"Magic Square found at Generation {solution_generation}.")
+        else:
             for row_labels in self.grid_labels:
                 for label in row_labels:
                     label['text'] = ""
+            messagebox.showinfo("No Solution", "The program stuck in local optima. Please Try again (;")
 
         self.run_button.config(state=tk.NORMAL)
-        messagebox.showinfo("Info", "Genetic Algorithm has completed running.")
 
     def reset(self):
         self.ga.population = []
