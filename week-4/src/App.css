@@ -1,0 +1,631 @@
+.app {
+    min-height: 100vh;
+    min-width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    transition: background-color 0.5s, color 0.5s;
+    box-sizing: border-box;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 800px;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+    transition: color 0.3s ease;
+}
+
+.light-mode {
+    background-color: #ebedee;
+    color: #333;
+}
+
+.dark-mode {
+    background: #000000;
+    color: #fbfbfb;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 30px;
+    background-color: #333;
+    border-radius: 15px;
+    cursor: pointer;
+    position: relative;
+    margin-bottom: 20px;
+    transition: background-color 0.3s ease;
+    margin-left: auto;
+}
+
+.light-mode .toggle-container {
+    background-color: #201c1c;
+}
+
+.icon {
+    font-size: 1.2rem;
+    position: absolute;
+    transition: transform 0.3s ease;
+}
+
+.light-mode .icon {
+    color: #fbfbfb;
+    transform: translateX(-15px);
+}
+
+.dark-mode .icon {
+    color: white;
+    transform: translateX(15px);
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.board-size-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.fetch-button {
+    background: #201c1c;
+    color: white;
+    border: none;
+    margin-top: 20px;
+}
+
+.border-size {
+    border: 2px solid #333;
+    border-radius: 12px;
+    width: 50px;
+    padding: 0.5rem 1rem;
+    overflow: hidden;
+    text-align: center;
+}
+
+.solution-list {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.select-container {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.select-container select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    cursor: pointer;
+    background: #201c1c;
+    color: #fbfbfb;
+}
+
+.chessboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.loading-text {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.chessboard-container {
+    display: flex;
+    align-items: center;
+}
+
+.chessboard-wrapper {
+    overflow: hidden;
+    padding: 10px;
+    background-color: #232323;
+    border-radius: 12px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease;
+}
+
+.chessboard-letters {
+    display: flex;
+    width: 94%;
+}
+
+.spacer {
+    width: 1.9rem;
+    margin-right: 4px;
+}
+
+.chessboard-letter {
+    width: 5.09rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fbfbfb;
+    background-color: #333;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.chessboard-numbers {
+    display: flex;
+    flex-direction: column;
+}
+
+.chessboard-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    height: 3.5rem;
+    font-weight: bold;
+    background-color: #333;
+    border-radius: 5px;
+    padding: 10px;
+    color: #fbfbfb;
+    margin: 2px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.chessboard-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #fbfbfb;
+    margin: 0 0 -20px;
+}
+
+
+.chessboard {
+    display: grid;
+    /* grid-template-columns: repeat(8, 5rem);
+    grid-template-rows: repeat(8, 5rem); */
+    border: 2px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.cell {
+    width: 5rem;
+    height: 5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    transition: background-color 0.3s ease;
+}
+
+.cell span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.cell span:hover {
+    transform: scale(1.1);
+}
+
+.even-cell {
+    background-color: #fbfbfb;
+}
+
+.odd-cell {
+    background-color: #b15f32;
+}
+
+.bishop-cell {
+    color: #201c1c;
+    transition: transform 0.2s ease;
+}
+
+.selected-bishop {
+    background-color: #cccc18;
+}
+
+.diagonal-cell {
+    background-color: lightblue;
+}
+
+.threatened-cell {
+    background-color: #d51a1a;
+}
+
+.bishop-positions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: 40px;
+    margin-bottom: 10px;
+    color: white;
+    background-color: #333;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.selected-bishop-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #333;
+    border-radius: 8px;
+    color: #fbfbfb;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.selected-bishop-label {
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.selected-bishop-position {
+    font-size: 1.2rem;
+    color: #ffeb3b;
+}
+
+
+
+@media (max-width: 1440px) { 
+    .container {
+        padding: 15px;
+        max-width: 90%;
+    }
+    .title {
+        font-size: 2.3rem;
+    }
+    .fetch-button{
+        font-size: 1rem;
+    }
+    .subtitle {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+    }
+
+    .chessboard-wrapper {
+        padding: 8px;
+    }
+
+
+    .cell {
+        width: 4rem;
+        height: 4rem;
+        font-size: 2rem;
+    }
+
+    .chessboard-letters .chessboard-letter{
+        font-size: 1rem;
+        width: 4rem;
+    }
+    .chessboard-numbers .chessboard-number {
+        font-size: 1rem;
+        height: 2.5rem;
+    }
+
+    .border-size {
+        width: 40px;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .select-container select {
+        font-size: 1rem;
+        padding: 8px;
+    }
+    .input-container input {
+        font-size: 1rem;
+        width: 4.4rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .container {
+        padding: 10px;
+        max-width: 95%;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+
+    .fetch-button{
+        font-size: 0.9rem;
+    }
+    .subtitle {
+        font-size: 1.1rem;
+        margin-bottom: 7px;
+    }
+
+    .cell {
+        width: 3.5rem;
+        height: 3.5rem;
+        font-size: 1.8rem;
+    }
+    .chessboard-title {
+        font-size: 1.7rem;
+    }
+
+    .bishop-positions {
+        padding: 6px;
+        font-size: 0.9rem;
+    }
+    .selected-bishop-info {
+        padding: 2px;
+    }
+    .selected-bishop-label {
+        padding: 5px;
+        font-size: 0.9rem;
+    }
+    .selected-bishop-position{
+        font-size: 1.1rem;
+    }
+
+    .chessboard-letters .chessboard-letter{
+        font-size: 0.9rem;
+        width: 3.5rem;
+    }
+    .chessboard-numbers .chessboard-number{
+        font-size: 0.9rem;
+        height: 2rem;
+    }
+
+    .chessboard {
+        border-width: 1.5px;
+    }
+
+    .toggle-container {
+        width: 50px;
+        height: 25px;
+    }
+
+    .icon {
+        font-size: 1rem;
+    }
+
+    .border-size {
+        width: 35px;
+        padding: 0.3rem 0.7rem;
+    }
+
+    .select-container select {
+        font-size: 0.9rem;
+        padding: 6px;
+    }
+
+    .input-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        font-size: 0.9rem;
+    }
+    .input-container input {
+        font-size: 0.8rem;
+        width: 4.1rem;
+    }
+}
+
+@media (max-width: 768px) { 
+    .container {
+        flex-direction: column;
+        padding: 5px;
+    }
+    .toggle-container {
+        width: 45px;
+        height: 20px;
+    }
+
+    .icon {
+        font-size: 0.8rem;
+        transform: translateX(8px);
+    }
+
+    .light-mode .icon {
+        transform: translateX(-8px);
+    }
+    .toggle-container {
+        width: 40px;
+        height: 20px; 
+    }
+
+    .icon {
+        font-size: 0.8rem; 
+        transform: translateX(8px); 
+        padding-right: 5px; 
+    }
+
+    .light-mode .icon {
+        transform: translateX(-8px);
+    }
+
+    .title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .fetch-button{
+        font-size: 0.8rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .cell {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.5rem;
+    }
+    .chessboard-title {
+        font-size: 1.5rem;
+    }
+
+    .bishop-positions {
+        padding: 5px;
+        font-size: 0.8rem;
+    }
+    .selected-bishop-info {
+        padding: 2px;
+    }
+    .selected-bishop-label {
+        padding: 5px;
+        font-size: 0.8rem;
+    }
+    .selected-bishop-position{
+        font-size: 1rem;
+    }
+
+    .chessboard-letters .chessboard-letter{
+        font-size: 0.8rem;
+        width: 2.5rem;
+        height: 1.2rem;
+    }
+    
+    .chessboard-numbers .chessboard-number {
+        font-size: 0.7rem;
+        height: 1rem;
+        width: 0.1rem;
+    }
+
+    .chessboard-wrapper {
+        padding: 5px;
+    }
+
+    .toggle-container {
+        width: 40px;
+        height: 20px;
+    }
+
+    .icon {
+        font-size: 0.8rem;
+    }
+
+    .border-size {
+        width: 30px;
+        padding: 0.2rem 0.5rem;
+    }
+
+    .select-container select {
+        font-size: 0.8rem;
+        padding: 4px;
+    }
+
+    .input-container {
+        font-size: 0.7rem;
+    }
+    .input-container input {
+        font-size: 0.7rem;
+        width: 2.1rem;
+    }
+}
+
+@media (max-width: 480px) { 
+    .cell {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1.2rem;
+    }
+    .title {
+        font-size: 1.2rem;
+    }
+
+    .chessboard-wrapper {
+        padding: 3px;
+    }
+    .chessboard-title {
+        font-size: 1.1rem;
+    }
+
+    .chessboard-letters .chessboard-letter{
+        font-size: 0.5rem;
+        width: 1.8rem;
+        height: 1rem;
+    }
+    .chessboard-numbers .chessboard-number {
+        font-size: 0.5rem;
+        height: 0.5rem;
+        width: 0.001rem;
+    }
+
+    .toggle-container {
+        width: 35px;
+        height: 15px;
+    }
+
+    .icon {
+        font-size: 0.6rem;
+        padding-right: 6px;
+    }
+
+    .fetch-button{
+        font-size: 0.7rem;
+    }
+    .select-container select {
+        font-size: 0.6rem;
+        padding: 3px;
+        width: 200px;
+    }
+
+    .border-size {
+        width: 25px;
+        padding: 0.2rem 0.4rem;
+    }
+    .bishop-positions{
+        padding: 3px;
+        font-size: 0.6rem;
+    }
+    .selected-bishop-info {
+        padding: 1px;
+    }
+    .selected-bishop-label {
+        padding: 3px;
+        font-size: 0.6rem;
+    }
+    .selected-bishop-position{
+        font-size: 0.7rem;
+    }
+
+    .select-container select {
+        font-size: 0.7rem;
+        padding: 3px;
+    }
+
+    .input-container {
+        font-size: 0.5rem;
+    }
+    .input-container input {
+        font-size: 0.5rem;
+        width: 2rem;
+        padding: 2px;
+    }
+}
