@@ -50,15 +50,30 @@ def train(data: pd.DataFrame):
 
 
 def predict(input_data: Dict[str, str]):
-    results = {
-        class_label: class_probabilities[class_label] *
-                     sum(probabilities[feature].get(f"{value},{class_label}", 0) for feature, value in
-                         input_data.items())
-        for class_label in class_probabilities
-    }
+    results = {}
 
+    # Calculate the joint probability for each class
+    for class_label in class_probabilities:
+        joint_probability = class_probabilities[class_label]
+
+        for feature, value in input_data.items():
+            joint_probability *= probabilities[feature].get(f"{value},{class_label}", 1)  # Use 1 if missing
+
+        results[class_label] = joint_probability
+
+    # Calculate the total joint probability
     total = sum(results.values())
-    return {k: v / total for k, v in results.items()} if total > 0 else results
+
+    # Check if total is 0
+    if total == 0:
+        # If total is 0, return the original results (they are all zero probabilities)
+        return {class_label: 0 for class_label in results}
+
+    # Normalize the probabilities if total > 0
+    for class_label in results:
+        results[class_label] /= total  # Divide each by the total to normalize
+
+    return results
 
 
 @app.post("/upload")
