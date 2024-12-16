@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KNN Visualization</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="controls-panel">
+            <h2>KNN Controls</h2>
+            <div class="control-group">
+                <label for="n-samples">Number of Samples:</label>
+                <input type="number" id="n-samples" value="1000" min="100" max="5000">
+            </div>
+            <div class="control-group">
+                <label for="n-classes">Number of Classes:</label>
+                <input type="number" id="n-classes" value="3" min="2" max="10">
+            </div>
+            <div class="control-group">
+                <label for="k-value">K Value:</label>
+                <input type="number" id="k-value" value="3" min="1" max="20">
+            </div>
+            <div class="control-group">
+                <label for="sample-size">Sample Size (for sampling method):</label>
+                <input type="number" id="sample-size" value="100" min="10" max="1000">
+            </div>
+            <button id="generate-btn">Generate New Data</button>
+        </div>
+
+        <div class="visualization-panel">
+            <div id="scatter-plot"></div>
+            <div class="stats-panel">
+                <div class="traditional-stats">
+                    <h3>Traditional KNN</h3>
+                    <div id="traditional-stats"></div>
+                </div>
+                <div class="sampling-stats">
+                    <h3>Sampling KNN</h3>
+                    <div id="sampling-stats"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
