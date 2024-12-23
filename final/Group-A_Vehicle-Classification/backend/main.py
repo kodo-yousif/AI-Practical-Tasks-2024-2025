@@ -1,3 +1,5 @@
+# python -m uvicorn main:app --reload
+
 import os
 import logging
 from fastapi import FastAPI, UploadFile, HTTPException

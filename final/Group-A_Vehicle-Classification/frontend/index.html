@@ -1,115 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vehicle Classification</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      text-align: center;
-      padding: 50px;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background-color: white;
-      padding: 20px;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    }
-    h1 {
-      color: #333;
-    }
-    input[type="file"] {
-      padding: 10px;
-      margin: 20px 0;
-      background-color: #fff;
-      border: 2px solid #ccc;
-    }
-    button {
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      border: none;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .result {
-      margin-top: 20px;
-      font-size: 18px;
-      color: #555;
-    }
-    .image-preview {
-      margin-top: 20px;
-      max-width: 100%;
-      height: auto;
-      display: none;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    <h1>Vehicle Classification Model</h1>
-    <input type="file" id="imageUpload" accept="image/*" />
-    <br>
-    <button onclick="predict()">Predict Vehicle Type</button>
-
-    <div class="result" id="result"></div>
-    <img id="imagePreview" class="image-preview" />
-  </div>
-
-  <script>
-    document.getElementById('imageUpload').addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const imagePreview = document.getElementById('imagePreview');
-          imagePreview.src = e.target.result;
-          imagePreview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    async function predict() {
-      const fileInput = document.getElementById('imageUpload');
-      const resultDiv = document.getElementById('result');
-      resultDiv.innerHTML = 'Processing...';
-
-      // Check if a file was selected
-      if (fileInput.files.length === 0) {
-        resultDiv.innerHTML = 'Please select an image file first.';
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
-
-      try {
-        // Send the image to the FastAPI backend
-        const response = await fetch('http://127.0.0.1:8000/predict', {
-          method: 'POST',
-          body: formData
-        });
-
-        // Check for a successful response
-        if (response.ok) {
-          const data = await response.json();
-          resultDiv.innerHTML = `Predicted Vehicle Class: ${data.class}`;
-        } else {
-          throw new Error('Error from server: ' + response.statusText);
-        }
-      } catch (error) {
-        resultDiv.innerHTML = 'Error: ' + error.message;
-      }
-    }
-  </script>
-
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Vehicle</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
