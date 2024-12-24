@@ -85,19 +85,21 @@ function App() {
     formData.append('file', fileInputRef.current.files[0])
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/predict', {
+      const response = await fetch('http://localhost:8000/predict', {
         method: 'POST',
-        body: formData
+        body: formData,
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setResult(`Predicted Vehicle Class: ${data.class}`)
-      } else {
-        throw new Error('Error from server: ' + response.statusText)
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Server Error (${response.status}): ${errorText}`)
       }
+
+      const data = await response.json()
+      setResult(`Predicted Vehicle Class: ${data.class}`)
     } catch (error) {
-      setResult('Error: ' + error.message)
+      console.error('Prediction error:', error)
+      setResult(`Error: ${error.message}`)
     } finally {
       resultElement?.classList.remove('processing')
     }
