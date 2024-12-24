@@ -1,26 +1,21 @@
-# python -m uvicorn main:app --reload
-
 import os
 import logging
 from fastapi import FastAPI, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import torch
 from torchvision import transforms
 from torch import nn
 from torchvision.models import resnet18, ResNet18_Weights
-import warnings
-
-warnings.filterwarnings("ignore")
-
-app = FastAPI()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# CORSMiddleware to allow requests from all origins
+# Initialize FastAPI app
+app = FastAPI()
+
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,7 +27,7 @@ app.add_middleware(
 # Define the model
 class VehicleClassifier(nn.Module):
     def __init__(self, num_classes=10):
-        super(VehicleClassifier, self).__init__()
+        super().__init__()
         self.model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
         self.model.fc = nn.Sequential(
             nn.Linear(self.model.fc.in_features, 512),
@@ -41,50 +36,46 @@ class VehicleClassifier(nn.Module):
             nn.Linear(512, num_classes),
         )
 
-    def forward(self, x):
-        return self.model(x)
-
-# Load the model
-model = VehicleClassifier(num_classes=10)
+# Load model
 model_path = "vehicle_classifier.pt"
+model = VehicleClassifier(num_classes=10)
 if os.path.exists(model_path):
-    model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
+    model.load_state_dict(torch.load(model_path, map_location="cpu"))
+    model.eval()
     logger.info("Model loaded successfully.")
 else:
     logger.error("Model file not found.")
-model.eval()
+    raise RuntimeError("Model file not found. Please ensure 'vehicle_classifier.pt' is present.")
 
-# Define transformations
+# Define image transformation
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
 ])
 
 # Class labels
-class_names = ["Bus", "Family Sedan", "Fire Engine", "Heavy Truck", "Jeep",
-               "Mini Bus", "Racing Car", "SUV", "Taxi", "Truck"]
+class_names = [
+    "SUV", "Family Sedan", "Fire Engine", "Heavy Truck", "Jeep",
+    "Mini Bus", "Racing Car", "Bus", "Taxi", "Truck"
+]
 
 @app.post("/predict")
 async def predict(file: UploadFile):
+    if file.content_type not in ["image/jpeg", "image/png"]:
+        raise HTTPException(status_code=400, detail="Invalid file type. Use JPEG or PNG.")
+
     try:
-        if file.content_type not in ["image/jpeg", "image/png"]:
-            raise HTTPException(status_code=400, detail="Invalid file type")
-
+        # Load and preprocess image
         image = Image.open(file.file).convert("RGB")
-        logger.info(f"Original image size: {image.size}")
+        image_tensor = transform(image).unsqueeze(0)
 
-        image = transform(image).unsqueeze(0)
-        logger.info(f"Transformed image shape: {image.shape}")
-
+        # Perform prediction
         with torch.no_grad():
-            output = model(image)
-            logger.info(f"Model output: {output}")
-            predicted_class = torch.argmax(output, dim=1)
-            logger.info(f"Predicted class index: {predicted_class.item()}")
+            output = model(image_tensor)
+            predicted_class = torch.argmax(output, dim=1).item()
 
-        class_name = class_names[predicted_class.item()]
-        logger.info(f"Predicted class name: {class_name}")
-        return JSONResponse(content={"class": class_name})
+        # Return prediction result
+        return {"class": class_names[predicted_class]}
     except Exception as e:
-        logger.error(f"Error during prediction: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error during prediction: {e}")
+        raise HTTPException(status_code=500, detail="Error processing the image.")
