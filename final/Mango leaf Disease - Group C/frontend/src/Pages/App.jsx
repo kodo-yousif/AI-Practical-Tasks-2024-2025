@@ -827,7 +827,7 @@ function App() {
                                         fontWeight: "bolder"
                                     }}
                                 >
-                                    Linear Regression Model
+                                    Mango Leaf Disease Detection
                                 </Typography.Title>
                             </Row>
                         </Col>
