@@ -248,17 +248,14 @@ async def predict(image: UploadFile = File(...)):
 @app.post("/save_models")
 async def save_models():
     try:
-        # Check if models are trained
         if not any(trained_models.values()):
             raise HTTPException(status_code=400, detail="No trained models to save.")
 
-        # Save each trained model
         for model_name, model in trained_models.items():
             if model:
                 model_path = os.path.join(MODEL_SAVE_DIR, f"{model_name}.joblib")
                 joblib.dump(model, model_path)
 
-        # Create a ZIP file with all models
         zip_path = os.path.join(MODEL_SAVE_DIR, "trained_models.zip")
         with zipfile.ZipFile(zip_path, 'w') as zipf:
             for model_name in trained_models.keys():
@@ -266,7 +263,6 @@ async def save_models():
                 if os.path.exists(model_file):
                     zipf.write(model_file, arcname=f"{model_name}.joblib")
 
-        # Return the ZIP file as a response
         return FileResponse(zip_path, filename="trained_models.zip", media_type="application/zip")
 
     except Exception as e:
@@ -275,22 +271,18 @@ async def save_models():
 @app.post("/load_models")
 async def load_models(file: UploadFile = File(...)):
     try:
-        # Save the uploaded file temporarily
         temp_zip_path = "temp_models.zip"
         with open(temp_zip_path, "wb") as f:
             f.write(await file.read())
 
-        # Extract the ZIP file
         with zipfile.ZipFile(temp_zip_path, 'r') as zipf:
             zipf.extractall(MODEL_SAVE_DIR)
 
-        # Load each model into the trained_models dictionary
         for model_name in trained_models.keys():
             model_file = os.path.join(MODEL_SAVE_DIR, f"{model_name}.joblib")
             if os.path.exists(model_file):
                 trained_models[model_name] = joblib.load(model_file)
 
-        # Clean up the temporary file
         os.remove(temp_zip_path)
 
         return JSONResponse({"message": "Models loaded successfully."})
