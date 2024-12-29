@@ -1,0 +1,49 @@
+# Ignore the dataset directory
+datasets
+
+# Ignore Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore environment files
+.env
+*.env
+
+# Ignore virtual environments
+venv/
+.env/
+*.venv
+*.env.bak
+
+# Ignore compiled files
+*.so
+*.o
+*.a
+*.out
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore model checkpoints and large files
+*.ckpt
+*.h5
+
+# Ignore cache and temporary files
+*.tmp
+.cache/
+*.swp
+
+# Ignore FastAPI logs
+*.db
+*.sqlite3
+
+# Ignore any other large files generated during training/testing
+lightning_logs/
