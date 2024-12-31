@@ -1,0 +1,4 @@
+# Add your Python package dependencies here, one per line
+# For example:
+django==4.2.0
+djangorestframework==3.14.0

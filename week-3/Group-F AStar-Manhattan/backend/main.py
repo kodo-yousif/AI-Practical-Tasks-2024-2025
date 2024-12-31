@@ -6,17 +6,7 @@ from pydantic import BaseModel
 import heapq
 from models import Node
 
-
 app = FastAPI()
-
-
-
-
-
-
-
-
-
 
 app.add_middleware(
     CORSMiddleware,
