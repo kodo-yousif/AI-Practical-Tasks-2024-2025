@@ -7,17 +7,9 @@ import io
 import torch.nn as nn
 import torch.nn.functional as F
 from pathlib import Path
-import sys
-import os
 import warnings
 
 warnings.filterwarnings("ignore")
-
-# Add the parent directory of the 'notebooks' folder to sys.path
-sys.path.insert(1, os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../notebooks"))
-from custom_cnn_feature_extractor import CustomCNNFeatureExtractor
-
-
 
 # Define the FastAPI app
 app = FastAPI()
@@ -34,21 +26,51 @@ app.add_middleware(
 class VehicleClassifier(nn.Module):
     def __init__(self, num_classes=10):
         super().__init__()
-        self.model = CustomCNNFeatureExtractor(num_classes=num_classes)
-        self.model.fc = nn.Sequential(
-            nn.Linear(512 * 3 * 3, 512),  # Increased number of neurons
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 16, kernel_size=3, padding=1),
+            nn.BatchNorm2d(16),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(16, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+        )
+        self.fc = nn.Sequential(
+            nn.Linear(512 * 3 * 3, 512),
             nn.BatchNorm1d(512),
             nn.ReLU(),
-            nn.Dropout(0.5),  # Additional dropout layer
+            nn.Dropout(0.5),
             nn.Linear(512, num_classes)
         )
 
     def forward(self, x):
-        return self.model(x)
+        x = self.features(x)
+        x = x.view(x.size(0), -1)  # Flatten the output for the fully connected layer
+        x = self.fc(x)
+        return x
 
     def predict(self, x):
         with torch.no_grad():
-            output = self(x)
+            x = self.features(x)
+            x = x.view(x.size(0), -1)
+            output = self.fc(x)
             probabilities = torch.nn.functional.softmax(output, dim=1)
             predicted_class = torch.argmax(probabilities, dim=1)
             return predicted_class, probabilities.max().item()
@@ -68,8 +90,15 @@ if not Path(model_path).exists():
 # Initialize the model and load weights
 num_classes = len(class_names)
 model = VehicleClassifier(num_classes=num_classes)
-model.load_state_dict(torch.load(model_path))
-model.eval()
+state_dict = torch.load(model_path)
+
+new_state_dict = {}
+for key, value in state_dict.items():
+    new_key = key.replace("model.", "")  # Remove 'model.' prefix
+    new_state_dict[new_key] = value
+
+model.load_state_dict(new_state_dict)
+model.eval()  # Ensure the model is in evaluation mode
 
 # Define the image transformation
 transform = transforms.Compose([
@@ -90,7 +119,7 @@ async def predict(file: UploadFile = File(...)):
 
         # Predict class
         with torch.no_grad():
-            output = model(img_tensor)
+            output = model(img_tensor)  # Directly call the model which invokes forward()
             probabilities = F.softmax(output, dim=1)
             predicted_class = torch.argmax(probabilities, dim=1)
 
