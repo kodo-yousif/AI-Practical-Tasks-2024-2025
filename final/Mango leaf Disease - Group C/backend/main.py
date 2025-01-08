@@ -46,10 +46,10 @@ trained_models = {
 
 x, y = [], []
 
-svm = SVC(kernel='rbf', probability=True)
-knn = KNeighborsClassifier(n_neighbors=5)
-gnb = GaussianNB()
-mlp = MLPClassifier(hidden_layer_sizes=(64,), max_iter=1000, solver='adam', random_state=42)
+svm = SVC(C = 100, gamma =  'scale', kernel =  'linear')
+knn = KNeighborsClassifier(metric = 'manhattan', n_neighbors = 3, weights = 'distance')
+gnb = GaussianNB(var_smoothing = 1e-09)
+mlp = MLPClassifier(activation = 'tanh', alpha = 0.0001, hidden_layer_sizes = (32,), learning_rate = 'constant', max_iter = 1000, solver = 'adam')
 
 def extract_features(img_path, img_size=(256, 256)):
     img = cv2.imread(img_path, cv2.IMREAD_COLOR)
@@ -57,7 +57,6 @@ def extract_features(img_path, img_size=(256, 256)):
     features = []
 
     if used_features['hsv']:
-        print("Extracting HSV features")
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         hist_h = cv2.calcHist([hsv], [0], None, [32], [0, 180]).flatten()
         hist_s = cv2.calcHist([hsv], [1], None, [32], [0, 256]).flatten()
@@ -72,14 +71,12 @@ def extract_features(img_path, img_size=(256, 256)):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     if used_features['lbp']:
-        print("Extracting LBP features")
         lbp = local_binary_pattern(gray, P=8, R=1, method='uniform')
         lbp_hist, _ = np.histogram(lbp, bins=np.arange(0, 11), range=(0, 10))
         lbp_hist = lbp_hist / (lbp_hist.sum() + 1e-7)
         features.append(lbp_hist)
 
     if used_features['glcm']:
-        print("Extracting GLCM features")
         glcm = graycomatrix(gray, distances=[1], angles=[0], symmetric=True, normed=True)
         contrast = graycoprops(glcm, prop='contrast').flatten()
         correlation = graycoprops(glcm, prop='correlation').flatten()
@@ -97,8 +94,10 @@ async def load_data(folder_path: str= Body(..., embed=True)):
         DATA_DIR = folder_path
         CATEGORIES = os.listdir(DATA_DIR)
         loaded_x, loaded_y = [], []
+        CATEGORIES.remove('.DS_Store')
         for idx, category in enumerate(CATEGORIES):
             folder = os.path.join(DATA_DIR, category)
+            print(folder)
             for file in os.listdir(folder):
                 filepath = os.path.join(folder, file)
                 if file.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -118,7 +117,8 @@ async def load_data(folder_path: str= Body(..., embed=True)):
         })
 
     except Exception as e:
-        return JSONResponse({"error": str(e)})
+        print(e)
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/train")
 async def train(request: Request):
@@ -206,7 +206,7 @@ async def train(request: Request):
         })
 
     except Exception as e:
-        return JSONResponse({"error": str(e)})
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/predict")
 async def predict(image: UploadFile = File(...)):
@@ -243,7 +243,7 @@ async def predict(image: UploadFile = File(...)):
         })
 
     except Exception as e:
-        return JSONResponse({"error": str(e)})
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/save_models")
 async def save_models():
@@ -266,7 +266,7 @@ async def save_models():
         return FileResponse(zip_path, filename="trained_models.zip", media_type="application/zip")
 
     except Exception as e:
-        return JSONResponse({"error": str(e)})
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/load_models")
 async def load_models(file: UploadFile = File(...)):
@@ -288,7 +288,7 @@ async def load_models(file: UploadFile = File(...)):
         return JSONResponse({"message": "Models loaded successfully."})
 
     except Exception as e:
-        return JSONResponse({"error": str(e)})
+        raise HTTPException(status_code=400, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
