@@ -95,7 +95,7 @@ function App() {
     });
     
     const [darkMode, setDarkMode] = useState(false);
-    const [colorPrimary, setColorPrimary] = useState('#96FF00');
+    const [colorPrimary, setColorPrimary] = useState('#00FF89');
     
     const [dataUrl, setDataUrl] = useState('');
     const [features, setFeatures] = useState({
@@ -843,7 +843,7 @@ function App() {
                                 checkedChildren = {<MoonFilled/>}
                                 unCheckedChildren = {<SunFilled spin/>}
                                 onChange = {(value) => {
-                                    setColorPrimary(value ? '#00FF89' : '#96FF00')
+                                    setColorPrimary(value ? '#00FF89' : '#00FF89')
                                     setDarkMode(value)
                                 }}
                             />
@@ -1346,7 +1346,7 @@ function App() {
                             fontWeight: "bolder"
                         }}
                     >
-                        Copyright© 2004 - 2024 Something®. All rights reserved.
+                        Copyright© 2004 - 2025 Something®. All rights reserved.
                     </Typography.Title>
                 </Footer>
             </Layout>
