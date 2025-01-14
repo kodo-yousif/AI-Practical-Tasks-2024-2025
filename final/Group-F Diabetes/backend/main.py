@@ -2,45 +2,49 @@
 # Run with: uvicorn main:app --reload
 
 import os
+
 os.environ["PYTHONHASHSEED"] = "42"
 os.environ["TF_DETERMINISTIC_OPS"] = "1"
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
 import random
 import numpy as np
 import pandas as pd
-import pickle
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
+# sklearn and imblearn
+from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import (
+    confusion_matrix,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score
+)
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
+from sklearn.neural_network import MLPClassifier
 
 from imblearn.over_sampling import SMOTE
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 def set_seed(seed_value=42):
     os.environ['PYTHONHASHSEED'] = str(seed_value)
     random.seed(seed_value)
     np.random.seed(seed_value)
-    tf.random.set_seed(seed_value)
-    tf.config.experimental.enable_op_determinism()
-    
+    # If you use TensorFlow or PyTorch, set their seeds here as well.
+
 set_seed(42)
 
 app = FastAPI()
 
-origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -51,162 +55,144 @@ app.add_middleware(
 
 class ModelData:
     def __init__(self):
-        self.models = {}             
-        self.scaler = None           
-        self.imputer = None          
-        self.best_model = None      
-        self.best_model_name = None  
+        self.models = {}             # Dictionary to store all models
+        self.scaler = None           # Store the scaler
+        self.imputer = None          # Store the imputer
+        self.best_model = None       # Best model object
+        self.best_model_name = None  # Name of the best model
 
 model_data = ModelData()
 
-def create_nn_model(input_dim):
-    model = keras.Sequential([
-        layers.Dense(64, activation='relu', input_dim=input_dim),
-        layers.BatchNormalization(),
-        layers.Dropout(0.3),
-        layers.Dense(32, activation='relu'),
-        layers.BatchNormalization(),
-        layers.Dropout(0.3),
-        layers.Dense(16, activation='relu'),
-        layers.Dense(1, activation='sigmoid')
-    ])
-
-    model.compile(
-        optimizer='adam',
-        loss='binary_crossentropy',
-        metrics=['accuracy']
-    )
-    return model
-
+# --------------------------------------------------
+# Adjust the columns to match your actual dataset
+# The CSV should have these 20 columns + `stress_level`.
+# --------------------------------------------------
 class UserSample(BaseModel):
-    Pregnancies: float
-    Glucose: float
-    BloodPressure: float
-    SkinThickness: float
-    Insulin: float
-    BMI: float
-    DiabetesPedigreeFunction: float
-    Age: float
+    """
+    Each field below corresponds to a column from your dataset
+    (excluding 'stress_level', which is our target).
+    Ensure the names match exactly the CSV header (except the target).
+    """
+    anxiety_level: float
+    self_esteem: float
+    mental_health_history: float
+    depression: float
+    headache: float
+    blood_pressure: float
+    sleep_quality: float
+    breathing_problem: float
+    noise_level: float
+    living_conditions: float
+    safety: float
+    basic_needs: float
+    academic_performance: float
+    study_load: float
+    teacher_student_relationship: float
+    future_career_concerns: float
+    social_support: float
+    peer_pressure: float
+    extracurricular_activities: float
+    bullying: float
+
 
 @app.post("/train")
 def train_models():
     try:
-        df = pd.read_csv("diabetes.csv")  
+        # 1. Load the dataset
+        df = pd.read_csv("dataset.csv")  # Ensure dataset.csv is in the same directory
 
-        X = df.drop('Outcome', axis=1)
-        y = df['Outcome']
+        # 2. Identify your target column
+        target_column = 'stress_level'
+        if target_column not in df.columns:
+            raise ValueError(f"'{target_column}' column not found in dataset columns: {df.columns.tolist()}")
 
-        cols_with_zeros = ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']
-        for col in cols_with_zeros:
-            X.loc[X[col] == 0, col] = np.nan
+        # If target is categorical strings, label-encode
+        # (In your case, it looks numeric, but this is here for safety.)
+        if df[target_column].dtype == object:
+            le = LabelEncoder()
+            df[target_column] = le.fit_transform(df[target_column])
 
+        # 3. Choose the features (X) vs. the target (y)
+        X = df.drop(target_column, axis=1)
+        y = df[target_column]
+
+        # 4. Handle missing values if needed
         imputer = SimpleImputer(strategy='median')
         X_imputed = imputer.fit_transform(X)
 
+        # 5. Scale the features
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X_imputed)
 
+        # 6. Handle class imbalance with SMOTE (optional, but recommended if classes are imbalanced)
         sm = SMOTE(random_state=42)
         X_resampled, y_resampled = sm.fit_resample(X_scaled, y)
 
+        # 7. Train-test split
         X_train, X_test, y_train, y_test = train_test_split(
-            X_resampled, 
-            y_resampled, 
-            test_size=0.2, 
+            X_resampled,
+            y_resampled,
+            test_size=0.2,
             random_state=42,
             stratify=y_resampled
         )
 
+        # Save scaler/imputer to model_data
         model_data.scaler = scaler
         model_data.imputer = imputer
 
-        svm_params = {
-            'C': [0.1, 1, 10],
-            'kernel': ['linear', 'rbf'],
-            'gamma': ['scale', 'auto']
-        }
-        knn_params = {
-            'n_neighbors': [3, 5, 7],
-            'weights': ['uniform', 'distance']
-        }
-        nb_params = {
-            'var_smoothing': [1e-9, 1e-8, 1e-7]
-        }
-
-        skf = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
-
-        svm = SVC(probability=True, random_state=42)
-        svm_gs = GridSearchCV(
-            estimator=svm,
-            param_grid=svm_params,
-            scoring='accuracy',
-            cv=skf,
-            n_jobs=1
+        # 8. Train various models (SVM, KNN, NB, MLPClassifier)
+        best_svm = SVC(
+            probability=True,
+            random_state=42,
+            C=1,
+            kernel='rbf',
+            gamma='auto'
         )
-        svm_gs.fit(X_train, y_train)
-        best_svm = svm_gs.best_estimator_
+        best_svm.fit(X_train, y_train)
 
-        knn = KNeighborsClassifier()
-        knn_gs = GridSearchCV(
-            estimator=knn,
-            param_grid=knn_params,
-            scoring='accuracy',
-            cv=skf,
-            n_jobs=-1
+        best_knn = KNeighborsClassifier(
+            n_neighbors=3,
+            weights='distance',
+            algorithm='auto',
+            p=2
         )
-        knn_gs.fit(X_train, y_train)
-        best_knn = knn_gs.best_estimator_
+        best_knn.fit(X_train, y_train)
 
-        nb = GaussianNB()
-        nb_gs = GridSearchCV(
-            estimator=nb,
-            param_grid=nb_params,
-            scoring='accuracy',
-            cv=skf,
-            n_jobs=-1
+        best_nb = GaussianNB(var_smoothing=1e-9)
+        best_nb.fit(X_train, y_train)
+
+        mlp_model = MLPClassifier(
+            hidden_layer_sizes=(64, 32),
+            activation='relu',
+            solver='sgd',
+            max_iter=200,
+            random_state=42,
+            early_stopping=True
         )
-        nb_gs.fit(X_train, y_train)
-        best_nb = nb_gs.best_estimator_
-
-        nn_model = create_nn_model(X_train.shape[1])
-        early_stop = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5)
-
-        nn_model.fit(
-            X_train,
-            y_train,
-            epochs=100,
-            batch_size=32,
-            validation_split=0.2,
-            callbacks=[early_stop, reduce_lr],
-            verbose=0,
-            shuffle=False  
-        )
+        mlp_model.fit(X_train, y_train)
 
         models = {
             'SVM': best_svm,
             'KNN': best_knn,
             'NaiveBayes': best_nb,
-            'NeuralNetwork': nn_model
+            'MLPClassifier': mlp_model
         }
 
+        # 9. Evaluate models
+        #    Because we have 3 classes (0, 1, 2) for stress_level, use average='macro' or 'weighted'.
         best_acc = 0.0
         best_model_name = None
         best_model_obj = None
-
         results = []
 
         for name, model_obj in models.items():
-            if isinstance(model_obj, tf.keras.Sequential):
-                y_pred_proba = model_obj.predict(X_test).flatten()
-                y_pred = (y_pred_proba > 0.5).astype(int)
-            else:
-                y_pred = model_obj.predict(X_test)
+            y_pred = model_obj.predict(X_test)
 
             acc = accuracy_score(y_test, y_pred)
-            prec = precision_score(y_test, y_pred)
-            rec = recall_score(y_test, y_pred)
-            f1 = f1_score(y_test, y_pred)
+            prec = precision_score(y_test, y_pred, average='macro')
+            rec = recall_score(y_test, y_pred, average='macro')
+            f1 = f1_score(y_test, y_pred, average='macro')
             cm = confusion_matrix(y_test, y_pred).tolist()
 
             if acc > best_acc:
@@ -223,12 +209,13 @@ def train_models():
                 "confusion_matrix": cm
             })
 
+        # Store the trained models and best model
         model_data.models = models
         model_data.best_model = best_model_obj
         model_data.best_model_name = best_model_name
 
         return {
-            "message": "Training complete with hyperparameter tuning + SMOTE",
+            "message": "Training complete on Student Stress dataset",
             "best_model": best_model_name,
             "best_accuracy": round(best_acc, 4),
             "results": results
@@ -236,6 +223,7 @@ def train_models():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/confusion-matrix/{model_name}")
 def get_model_confusion_matrix(model_name: str):
@@ -246,38 +234,46 @@ def get_model_confusion_matrix(model_name: str):
         raise HTTPException(status_code=404, detail="Model not found")
     
     try:
-        df = pd.read_csv("diabetes.csv")
-        X = df.drop('Outcome', axis=1)
-        y = df['Outcome']
+        # Re-load the dataset
+        df = pd.read_csv("dataset.csv")
+        target_column = 'stress_level'
+        if target_column not in df.columns:
+            raise ValueError(f"'{target_column}' column not found in dataset.")
 
-        cols_with_zeros = ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']
-        for col in cols_with_zeros:
-            X.loc[X[col] == 0, col] = np.nan
+        X = df.drop(target_column, axis=1)
+        y = df[target_column]
 
+        # If target is categorical strings, re-encode if needed
+        if y.dtype == object:
+            le = LabelEncoder()
+            y = le.fit_transform(y)
+
+        # Transform with the stored imputer/scaler
         X_imputed = model_data.imputer.transform(X)
         X_scaled = model_data.scaler.transform(X_imputed)
 
         model = model_data.models[model_name]
-
-        if isinstance(model, tf.keras.Sequential):
-            y_pred_proba = model.predict(X_scaled).flatten()
-            y_pred = (y_pred_proba > 0.5).astype(int)
-        else:
-            y_pred = model.predict(X_scaled)
-
+        y_pred = model.predict(X_scaled)
         cm = confusion_matrix(y, y_pred).tolist()
+
+        # For multi-class, we can label them as "Class 0", "Class 1", "Class 2", etc.
+        unique_labels = sorted(set(y))
 
         return {
             "confusion_matrix": cm,
-            "labels": ["Not Diabetic", "Diabetic"]
+            "labels": [f"Class {lbl}" for lbl in unique_labels]
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/predict")
-def predict_diabetes(sample: UserSample):
 
+@app.post("/predict")
+def predict_stress(sample: UserSample):
+    """
+    Predict the stress_level class (0, 1, or 2),
+    using the best model determined by training.
+    """
     if not model_data.models:
         raise HTTPException(
             status_code=400,
@@ -285,32 +281,28 @@ def predict_diabetes(sample: UserSample):
         )
 
     try:
+        # Convert pydantic model to DataFrame
         input_df = pd.DataFrame([dict(sample)])
-
-        cols_with_zeros = ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']
-        for col in cols_with_zeros:
-            input_df.loc[input_df[col] == 0, col] = np.nan
-
+        
+        # Impute and scale
         input_imputed = model_data.imputer.transform(input_df)
         input_scaled = model_data.scaler.transform(input_imputed)
 
         best_model = model_data.best_model
         best_model_name = model_data.best_model_name
 
-        if isinstance(best_model, tf.keras.Sequential):
-            prob = best_model.predict(input_scaled).flatten()[0]
-            prediction = 1 if prob > 0.5 else 0
-            confidence = prob if prediction == 1 else (1 - prob)
+        prediction = best_model.predict(input_scaled)[0]
+        if hasattr(best_model, "predict_proba"):
+            probabilities = best_model.predict_proba(input_scaled)[0]
+            confidence = float(probabilities[prediction])
         else:
-            prediction = int(best_model.predict(input_scaled)[0])
-            if hasattr(best_model, "predict_proba"):
-                probabilities = best_model.predict_proba(input_scaled)[0]
-                confidence = float(probabilities[prediction])
-            else:
-                confidence = 1.0
+            confidence = 1.0
+
+        # Convert to integer if the model returns something else
+        prediction = int(prediction)
 
         return {
-            "prediction": prediction,
+            "prediction": prediction,  # e.g. 0, 1, or 2
             "confidence": round(confidence, 4),
             "model_type": best_model_name
         }
@@ -318,6 +310,8 @@ def predict_diabetes(sample: UserSample):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# Local run
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
