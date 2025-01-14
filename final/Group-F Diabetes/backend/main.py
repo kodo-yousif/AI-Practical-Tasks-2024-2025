@@ -1,5 +1,5 @@
-# filename: main.py
-# Run with: uvicorn main:app --reload
+# pip install -r requirements.txt
+# uvicorn main:app --reload
 
 import os
 
@@ -38,8 +38,6 @@ def set_seed(seed_value=42):
     os.environ['PYTHONHASHSEED'] = str(seed_value)
     random.seed(seed_value)
     np.random.seed(seed_value)
-    # If you use TensorFlow or PyTorch, set their seeds here as well.
-
 set_seed(42)
 
 app = FastAPI()
@@ -63,16 +61,9 @@ class ModelData:
 
 model_data = ModelData()
 
-# --------------------------------------------------
-# Adjust the columns to match your actual dataset
-# The CSV should have these 20 columns + `stress_level`.
-# --------------------------------------------------
+
 class UserSample(BaseModel):
-    """
-    Each field below corresponds to a column from your dataset
-    (excluding 'stress_level', which is our target).
-    Ensure the names match exactly the CSV header (except the target).
-    """
+
     anxiety_level: float
     self_esteem: float
     mental_health_history: float
@@ -98,37 +89,28 @@ class UserSample(BaseModel):
 @app.post("/train")
 def train_models():
     try:
-        # 1. Load the dataset
         df = pd.read_csv("dataset.csv")  # Ensure dataset.csv is in the same directory
 
-        # 2. Identify your target column
         target_column = 'stress_level'
         if target_column not in df.columns:
             raise ValueError(f"'{target_column}' column not found in dataset columns: {df.columns.tolist()}")
 
-        # If target is categorical strings, label-encode
-        # (In your case, it looks numeric, but this is here for safety.)
         if df[target_column].dtype == object:
             le = LabelEncoder()
             df[target_column] = le.fit_transform(df[target_column])
 
-        # 3. Choose the features (X) vs. the target (y)
         X = df.drop(target_column, axis=1)
         y = df[target_column]
 
-        # 4. Handle missing values if needed
         imputer = SimpleImputer(strategy='median')
         X_imputed = imputer.fit_transform(X)
 
-        # 5. Scale the features
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X_imputed)
 
-        # 6. Handle class imbalance with SMOTE (optional, but recommended if classes are imbalanced)
         sm = SMOTE(random_state=42)
         X_resampled, y_resampled = sm.fit_resample(X_scaled, y)
 
-        # 7. Train-test split
         X_train, X_test, y_train, y_test = train_test_split(
             X_resampled,
             y_resampled,
@@ -137,11 +119,9 @@ def train_models():
             stratify=y_resampled
         )
 
-        # Save scaler/imputer to model_data
         model_data.scaler = scaler
         model_data.imputer = imputer
 
-        # 8. Train various models (SVM, KNN, NB, MLPClassifier)
         best_svm = SVC(
             probability=True,
             random_state=42,
@@ -179,8 +159,6 @@ def train_models():
             'MLPClassifier': mlp_model
         }
 
-        # 9. Evaluate models
-        #    Because we have 3 classes (0, 1, 2) for stress_level, use average='macro' or 'weighted'.
         best_acc = 0.0
         best_model_name = None
         best_model_obj = None
@@ -209,7 +187,6 @@ def train_models():
                 "confusion_matrix": cm
             })
 
-        # Store the trained models and best model
         model_data.models = models
         model_data.best_model = best_model_obj
         model_data.best_model_name = best_model_name
@@ -227,14 +204,11 @@ def train_models():
 
 @app.get("/confusion-matrix/{model_name}")
 def get_model_confusion_matrix(model_name: str):
-    """
-    Return the confusion matrix for the specified model using the entire dataset.
-    """
+
     if model_name not in model_data.models:
         raise HTTPException(status_code=404, detail="Model not found")
     
     try:
-        # Re-load the dataset
         df = pd.read_csv("dataset.csv")
         target_column = 'stress_level'
         if target_column not in df.columns:
@@ -243,12 +217,10 @@ def get_model_confusion_matrix(model_name: str):
         X = df.drop(target_column, axis=1)
         y = df[target_column]
 
-        # If target is categorical strings, re-encode if needed
         if y.dtype == object:
             le = LabelEncoder()
             y = le.fit_transform(y)
 
-        # Transform with the stored imputer/scaler
         X_imputed = model_data.imputer.transform(X)
         X_scaled = model_data.scaler.transform(X_imputed)
 
@@ -256,7 +228,6 @@ def get_model_confusion_matrix(model_name: str):
         y_pred = model.predict(X_scaled)
         cm = confusion_matrix(y, y_pred).tolist()
 
-        # For multi-class, we can label them as "Class 0", "Class 1", "Class 2", etc.
         unique_labels = sorted(set(y))
 
         return {
@@ -266,7 +237,6 @@ def get_model_confusion_matrix(model_name: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.post("/predict")
 def predict_stress(sample: UserSample):
@@ -281,10 +251,8 @@ def predict_stress(sample: UserSample):
         )
 
     try:
-        # Convert pydantic model to DataFrame
         input_df = pd.DataFrame([dict(sample)])
         
-        # Impute and scale
         input_imputed = model_data.imputer.transform(input_df)
         input_scaled = model_data.scaler.transform(input_imputed)
 
@@ -298,7 +266,6 @@ def predict_stress(sample: UserSample):
         else:
             confidence = 1.0
 
-        # Convert to integer if the model returns something else
         prediction = int(prediction)
 
         return {
@@ -310,8 +277,6 @@ def predict_stress(sample: UserSample):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# Local run
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
