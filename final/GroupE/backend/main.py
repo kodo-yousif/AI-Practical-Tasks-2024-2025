@@ -15,42 +15,89 @@ import joblib
 import uvicorn
 from typing import List
 from joblib import Parallel, delayed
+import math
+import json
+import time 
+import torch.optim as optim
+from torch.utils.data import TensorDataset, DataLoader
+import torch.nn.functional as F
 
 class TrainRequest(BaseModel):
     validation_method: str
+    model_type: str = "kNN"
 
 class PredictRequest(BaseModel):
     data_row: List[float]
     model_type: str
-
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], 
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Neural Network for Diabetes prediction
 class DiabetesNN(nn.Module):
     def __init__(self, input_size):
         super(DiabetesNN, self).__init__()
         self.fc1 = nn.Linear(input_size, 16)
-        self.relu = nn.ReLU()
         self.fc2 = nn.Linear(16, 8)
         self.fc3 = nn.Linear(8, 1)
-        self.sigmoid = nn.Sigmoid()
-
+        self.dropout = nn.Dropout(0.3)
+        
     def forward(self, x):
-        x = self.relu(self.fc1(x))
-        x = self.relu(self.fc2(x))
-        x = self.sigmoid(self.fc3(x))
+        x = F.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = F.relu(self.fc2(x))
+        x = self.dropout(x)
+        x = torch.sigmoid(self.fc3(x))
         return x
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 data = None
 scaler = None
 trained_models = {}
+
+model_status = {
+    "kNN": "not_trained",
+    "Bayesian": "not_trained",
+    "SVM": "not_trained",
+    "Neural": "not_trained"
+}
+
+def train_neural_network(model, X_train, y_train, X_test, y_test, epochs=100, batch_size=32):
+    criterion = nn.BCELoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    
+    X_train_tensor = torch.FloatTensor(X_train)
+    y_train_tensor = torch.FloatTensor(y_train).reshape(-1, 1)
+    
+    train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    
+    # Training loop
+    model.train()
+    for epoch in range(epochs):
+        total_loss = 0
+        for batch_X, batch_y in train_loader:
+            optimizer.zero_grad()
+            outputs = model(batch_X)
+            loss = criterion(outputs, batch_y)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
+    
+    # Evaluation
+    model.eval()
+    with torch.no_grad():
+        X_test_tensor = torch.FloatTensor(X_test)
+        test_outputs = model(X_test_tensor)
+        predictions = (test_outputs > 0.5).float().numpy()
+        probabilities = test_outputs.numpy()
+    
+    return predictions, probabilities
 
 def load_data():
     global data
@@ -67,7 +114,6 @@ def preprocess_data():
     if data is None:
         raise HTTPException(status_code=500, detail="Data not loaded")
 
-    # Handle missing values (0 values in certain columns)
     columns_to_process = ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']
     processed_data = data.copy()
 
@@ -75,53 +121,81 @@ def preprocess_data():
         processed_data[column] = processed_data[column].replace(0, np.nan)
         processed_data[column] = processed_data[column].fillna(processed_data[column].mean())
 
-    X = processed_data.iloc[:, :-1].values  # Convert to numpy array
-    y = processed_data.iloc[:, -1].values  # Convert to numpy array
+    X = processed_data.iloc[:, :-1].values
+    y = processed_data.iloc[:, -1].values
 
-    # Scale the features
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
     return X_scaled, y
 
 def save_model(model, model_name):
-    with open(f"{model_name}.pkl", "wb") as f:
-        joblib.dump(model, f)
+    if isinstance(model, DiabetesNN):
+        torch.save(model.state_dict(), f"{model_name}.pth")
+    else:
+        with open(f"{model_name}.pkl", "wb") as f:
+            joblib.dump(model, f)
 
 def load_model(model_name):
     try:
-        with open(f"{model_name}.pkl", "rb") as f:
-            return joblib.load(f)
+        if model_name == "Neural":
+            model = DiabetesNN(input_size=8)
+            model.load_state_dict(torch.load(f"{model_name}.pth"))
+            return model
+        else:
+            with open(f"{model_name}.pkl", "rb") as f:
+                return joblib.load(f)
     except FileNotFoundError:
         return None
-    
-    
-    
+
 def evaluate_model(model, X_test, y_test):
-    predictions = model.predict(X_test)
-    probas = model.predict_proba(X_test) if hasattr(model, "predict_proba") else None
+    try:
+        if isinstance(model, DiabetesNN):
+            model.eval()
+            with torch.no_grad():
+                X_tensor = torch.FloatTensor(X_test)
+                outputs = model(X_tensor)
+                predictions = (outputs > 0.5).float().numpy().flatten()
+                probas = outputs.numpy()
+        else:
+            predictions = model.predict(X_test)
+            probas = model.predict_proba(X_test) if hasattr(model, "predict_proba") else None
 
-    accuracy = accuracy_score(y_test, predictions)
-    precision = precision_score(y_test, predictions, zero_division=0)
-    recall = recall_score(y_test, predictions, zero_division=0)
-    f1 = f1_score(y_test, predictions, zero_division=0)
-    roc_auc = roc_auc_score(y_test, probas[:, 1]) if probas is not None else None
+        metrics = {
+            "accuracy": float(accuracy_score(y_test, predictions)),
+            "precision": float(precision_score(y_test, predictions, zero_division=0)),
+            "recall": float(recall_score(y_test, predictions, zero_division=0)),
+            "f1_score": float(f1_score(y_test, predictions, zero_division=0))
+        }
 
-    return {
-        "accuracy": accuracy,
-        "precision": precision,
-        "recall": recall,
-        "f1_score": f1,
-        "roc_auc": roc_auc,
-    }
+        if probas is not None:
+            if isinstance(probas, np.ndarray) and len(probas.shape) > 1:
+                probas = probas[:, 1]
+            metrics["roc_auc"] = float(roc_auc_score(y_test, probas))
+        else:
+            metrics["roc_auc"] = 0.0
+
+        metrics = {k: (v if not math.isnan(v) else 0.0) for k, v in metrics.items()}
+        return metrics
+
+    except Exception as e:
+        print(f"Error in evaluate_model: {str(e)}")
+        return {
+            "accuracy": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1_score": 0.0,
+            "roc_auc": 0.0
+        }
 
 def evaluate_fold(model, X_train, X_test, y_train, y_test):
-    model.fit(X_train, y_train)
-    return evaluate_model(model, X_test, y_test)
+    if isinstance(model, DiabetesNN):
+        predictions, _ = train_neural_network(model, X_train, y_train, X_test, y_test)
+        return evaluate_model(model, X_test, y_test)
+    else:
+        model.fit(X_train, y_train)
+        return evaluate_model(model, X_test, y_test)
 
-
-
-# API Endpoints
 @app.on_event("startup")
 async def startup_event():
     if not load_data():
@@ -134,49 +208,50 @@ async def startup_status():
     else:
         raise HTTPException(status_code=500, detail="Model not loaded")
 
-# API Endpoint to train models
-
 @app.post("/train")
 async def train_endpoint(request: TrainRequest):
     try:
         X, y = preprocess_data()
         validation_method = request.validation_method
 
+        models = {
+            "kNN": KNeighborsClassifier(n_neighbors=5),
+            "Bayesian": GaussianNB(),
+            "SVM": SVC(probability=True),
+            "Neural": DiabetesNN(input_size=8)
+        }
+
         if validation_method == "holdout":
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
             results = {}
 
-            models = {
-                "kNN": KNeighborsClassifier(n_neighbors=5),
-                "Bayesian": GaussianNB(),
-                "SVM": SVC(probability=True)
-            }
-
             for name, model in models.items():
-                model.fit(X_train, y_train)
-                results[name] = evaluate_model(model, X_test, y_test)
+                if isinstance(model, DiabetesNN):
+                    predictions, _ = train_neural_network(model, X_train, y_train, X_test, y_test)
+                else:
+                    model.fit(X_train, y_train)
+                
+                metrics = evaluate_model(model, X_test, y_test)
+                results[name] = {
+                    key: float(value) if not math.isnan(float(value)) else 0.0
+                    for key, value in metrics.items()
+                }
                 save_model(model, name)
 
             return results
 
         elif validation_method in ["3-fold", "10-fold"]:
             n_splits = 3 if validation_method == "3-fold" else 10
-            kf = KFold(n_splits=n_splits)
+            kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
             results = {}
-
-            models = {
-                "kNN": KNeighborsClassifier(n_neighbors=5),
-                "Bayesian": GaussianNB(),
-                "SVM": SVC(probability=True)
-            }
 
             for name, model in models.items():
                 metrics_sum = {
-                    "accuracy": 0,
-                    "precision": 0,
-                    "recall": 0,
-                    "f1_score": 0,
-                    "roc_auc": 0
+                    "accuracy": 0.0,
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0,
+                    "roc_auc": 0.0
                 }
                 valid_folds = 0
 
@@ -184,15 +259,24 @@ async def train_endpoint(request: TrainRequest):
                     X_train_cv, X_test_cv = X[train_index], X[test_index]
                     y_train_cv, y_test_cv = y[train_index], y[test_index]
 
-                    model.fit(X_train_cv, y_train_cv)
+                    if isinstance(model, DiabetesNN):
+                        model = DiabetesNN(input_size=8)  # Reinitialize for each fold
+                        predictions, _ = train_neural_network(model, X_train_cv, y_train_cv, X_test_cv, y_test_cv)
+                    else:
+                        model.fit(X_train_cv, y_train_cv)
+                    
                     fold_metrics = evaluate_model(model, X_test_cv, y_test_cv)
 
                     for key in metrics_sum:
-                        if fold_metrics[key] is not None:
+                        if fold_metrics[key] is not None and not math.isnan(fold_metrics[key]):
                             metrics_sum[key] += fold_metrics[key]
-                    valid_folds += 1
+                            valid_folds += 1
 
-                results[name] = {key: metrics_sum[key] / valid_folds for key in metrics_sum}
+                results[name] = {
+                    key: float(metrics_sum[key] / valid_folds if valid_folds > 0 else 0.0)
+                    for key in metrics_sum
+                }
+                
                 save_model(model, name)
 
             return results
@@ -204,23 +288,34 @@ async def train_endpoint(request: TrainRequest):
             loo = LeaveOneOut()
             results = {}
 
-            models = {
-                "kNN": KNeighborsClassifier(n_neighbors=5),
-                "Bayesian": GaussianNB(),
-                "SVM": SVC(probability=True)
-            }
-
             for name, model in models.items():
+                if isinstance(model, DiabetesNN):
+                    continue  # Skip neural network for LOO due to computational intensity
+
                 fold_results = Parallel(n_jobs=-1)(delayed(evaluate_fold)(
                     model, X[train_index], X[test_index], y[train_index], y[test_index]
                 ) for train_index, test_index in loo.split(X))
 
-                metrics_sum = {key: 0 for key in fold_results[0]}
+                metrics_sum = {
+                    "accuracy": 0.0,
+                    "precision": 0.0,
+                    "recall": 0.0,
+                    "f1_score": 0.0,
+                    "roc_auc": 0.0
+                }
+                valid_counts = {key: 0 for key in metrics_sum}
+
                 for fold_metrics in fold_results:
                     for key in metrics_sum:
-                        metrics_sum[key] += fold_metrics[key]
+                        if fold_metrics[key] is not None and not math.isnan(fold_metrics[key]):
+                            metrics_sum[key] += fold_metrics[key]
+                            valid_counts[key] += 1
 
-                results[name] = {key: metrics_sum[key] / len(fold_results) for key in metrics_sum}
+                results[name] = {
+                    key: float(metrics_sum[key] / valid_counts[key] if valid_counts[key] > 0 else 0.0)
+                    for key in metrics_sum
+                }
+
                 save_model(model, name)
 
             return results
@@ -231,43 +326,64 @@ async def train_endpoint(request: TrainRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-
 @app.post("/predict")
 async def predict_endpoint(request: PredictRequest):
+    
     try:
-        model_name = request.model_type
-        model = load_model(model_name)
-
+        model = load_model(request.model_type)
         if model is None:
-            # Train the model if it's not trained yet
-            X, y = preprocess_data()
-            results = train_model(X, y, "holdout")  # Default to holdout for initial training
-            model = load_model(model_name)  # Reload the model after training
-            if model is None:
-                raise HTTPException(status_code=500, detail="Model failed to load after training")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Model {request.model_type} not found. Please train the model first."
+            )
 
-        data_row_scaled = scaler.transform([request.data_row])  # Scale the incoming data row
-        model_type = model_name.lower()
+        if len(request.data_row) != 8:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Expected 8 features, got {len(request.data_row)}"
+            )
 
-        if model_type == "neural network":
+        if scaler is None:
+            _, _ = preprocess_data()
+            
+        data_row_scaled = scaler.transform([request.data_row])
+        if request.model_type == "Neural":
+            model.eval()
             with torch.no_grad():
-                model.eval()
-                data_tensor = torch.tensor(data_row_scaled, dtype=torch.float32)
-                prediction = model(data_tensor).item()
-            return {"prediction": prediction}
+                input_tensor = torch.FloatTensor(data_row_scaled)
+                output = model(input_tensor)
+                prediction = int(output.item() > 0.5)
+                probability = [1 - output.item(), output.item()]
         else:
             prediction = model.predict(data_row_scaled)[0]
-            return {"prediction": prediction}
+            probability = model.predict_proba(data_row_scaled)[0].tolist() if hasattr(model, 'predict_proba') else None
+            
+        response = {
+            "prediction": int(prediction),
+            "probability": probability
+        }
+        
+        return response
 
     except Exception as e:
+        if "is not fitted yet" in str(e):
+            print(e)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Model {request.model_type} needs to be trained first. Please call /train endpoint."
+            )
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/models/status")
+async def get_models_status():
+    status = {}
+    for model_name in ["kNN", "Bayesian", "SVM", "Neural"]:
+        model = load_model(model_name)
+        status[model_name] = "trained" if model is not None else "not trained"
+    return status
 
-# Run FastAPI app
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8080)
-
 
 
 # sklearn: A library for machine learning that includes algorithms like k-NN, Naive Bayes, and SVM, as well as utility functions for training and evaluation.
