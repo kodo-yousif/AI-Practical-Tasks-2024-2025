@@ -51,7 +51,7 @@ knn = KNeighborsClassifier(metric = 'manhattan', n_neighbors = 3, weights = 'dis
 gnb = GaussianNB(var_smoothing = 1e-09)
 mlp = MLPClassifier(activation = 'tanh', alpha = 0.0001, hidden_layer_sizes = (32,), learning_rate = 'constant', max_iter = 1000, solver = 'adam')
 
-def extract_features(img_path, img_size=(240, 240)):
+def extract_features(img_path, img_size=(256, 256)):
     img = cv2.imread(img_path, cv2.IMREAD_COLOR)
     img = cv2.resize(img, img_size)
     features = []
