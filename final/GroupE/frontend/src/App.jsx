@@ -7,6 +7,10 @@ export default function App() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [prediction, setPrediction] = useState(null);
+
+  const [trainingResults, setTrainingResults] = useState(false);
+  const [predictingResults, setPredictingResults] = useState(false);
+
   const defaultValues = {
     Pregnancies: 6,
     Glucose: 148,
@@ -58,7 +62,7 @@ export default function App() {
       }
 
       const data = await response.json();
-      console.log(data)
+      console.log(data);
       setResults(data);
     } catch (err) {
       setError(err.message || "An error occurred during training.");
@@ -112,26 +116,46 @@ export default function App() {
     return value;
   };
 
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
-  
-      <main className="w-full max-w-4xl bg-white rounded-xl shadow-lg p-8">
+    <div className="h-[100vh] max-h-[100vh] fixed inset-0 flex flex-col items-center justify-center bg-slate-900 px-6 overflow-hidden">
+      <main className="w-full  bg-slate-300 rounded-xl shadow-lg p-6 overflow-x-hidden overflow-y-auto">
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-blue-600 mb-4">
-            Diabetes Prediction Dashboard
+          <h1 className="text-4xl text-start font-bold text-blue-950 mb-4">
+            Diabetes Prediction
           </h1>
-          <p className="text-gray-600">
-            Train and evaluate different machine learning models for diabetes
-            prediction
-          </p>
         </header>
 
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-            Model Training
-          </h2>
-          <div className="flex items-center gap-4 mb-4">
+        <section className="mb-8 border-2 p-4 rounded-lg border-slate-400">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              Model Training
+            </h2>
+
+            <button
+              className={`${
+                results ? "cursor-pointer" : "cursor-default"
+              } transition-all ${trainingResults ? "rotate-180" : ""}`}
+              onClick={() => {
+                setTrainingResults(!trainingResults);
+              }}
+              disabled={!results}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="42px"
+                height="42px"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M12.7071 14.7071C12.3166 15.0976 11.6834 15.0976 11.2929 14.7071L6.29289 9.70711C5.90237 9.31658 5.90237 8.68342 6.29289 8.29289C6.68342 7.90237 7.31658 7.90237 7.70711 8.29289L12 12.5858L16.2929 8.29289C16.6834 7.90237 17.3166 7.90237 17.7071 8.29289C18.0976 8.68342 18.0976 9.31658 17.7071 9.70711L12.7071 14.7071Z"
+                  fill="#000000"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div className={`flex items-center gap-4 mb-4`}>
             <select
               value={validationMethod}
               onChange={(e) => setValidationMethod(e.target.value)}
@@ -145,8 +169,7 @@ export default function App() {
             <button
               onClick={handleTrain}
               disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
-                     transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Training..." : "Train Models"}
             </button>
@@ -174,12 +197,13 @@ export default function App() {
             </div>
           )}
 
-          {results && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {results && trainingResults && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">
                 Training Results
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {Object.entries(results).map(([model, metrics]) => (
                   <div key={model} className="bg-gray-50 rounded-lg p-4">
                     <h4 className="text-lg font-medium text-gray-700 mb-2">
@@ -207,12 +231,37 @@ export default function App() {
           )}
         </section>
 
-        <section>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-            Make a Prediction
-          </h2>
+        <section className="p-2 border-2 rounded-lg border-slate-400">
+          <div className="flex items-center justify-between ">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              Make a Prediction
+            </h2>
+
+            <button
+              className={`${
+                !predictingResults ? "cursor-pointer" : "cursor-default"
+              } transition-all ${predictingResults ? "rotate-180" : ""}`}
+              onClick={() => {
+                setPredictingResults(!predictingResults);
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="42px"
+                height="42px"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M12.7071 14.7071C12.3166 15.0976 11.6834 15.0976 11.2929 14.7071L6.29289 9.70711C5.90237 9.31658 5.90237 8.68342 6.29289 8.29289C6.68342 7.90237 7.31658 7.90237 7.70711 8.29289L12 12.5858L16.2929 8.29289C16.6834 7.90237 17.3166 7.90237 17.7071 8.29289C18.0976 8.68342 18.0976 9.31658 17.7071 9.70711L12.7071 14.7071Z"
+                  fill="#000000"
+                />
+              </svg>
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit(handlePredict)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {Object.entries(defaultValues)
                 .filter(([key]) => key !== "modelType")
                 .map(([key]) => (
@@ -243,43 +292,46 @@ export default function App() {
                 ))}
             </div>
 
-            <div>
-              <label
-                htmlFor="modelType"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Model Type
-              </label>
-              <select
-                {...register("modelType", {
-                  required: "Model type is required",
-                })}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none 
-                         focus:ring-2 focus:ring-blue-600 bg-white"
-              >
-                <option value="kNN">k-Nearest Neighbors</option>
-                <option value="Bayesian">Naive Bayes</option>
-                <option value="SVM">Support Vector Machine</option>
-                <option value="Neural">Neural Network</option>
-              </select>
+            <div className="flex justify-between items-end">
+              <div>
+                <label
+                  htmlFor="modelType"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Model Type
+                </label>
+                <select
+                  {...register("modelType", {
+                    required: "Model type is required",
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none 
+                focus:ring-2 focus:ring-blue-600 bg-white"
+                >
+                  <option value="kNN">k-Nearest Neighbors</option>
+                  <option value="Bayesian">Naive Bayes</option>
+                  <option value="SVM">Support Vector Machine</option>
+                  <option value="Neural">Neural Network</option>
+                </select>
+              </div>
+
               {errors.modelType && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.modelType.message}
                 </p>
               )}
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 
+              <button
+                type="submit"
+                disabled={loading}
+                className=" px-12 h-12 font-bold bg-amber-500 text-white rounded-lg hover:bg-green-700 
                        transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Predicting..." : "Predict"}
-            </button>
+              >
+                {loading ? "Predicting..." : "Predict"}
+              </button>
+            </div>
           </form>
 
-          {prediction && (
+          {prediction && predictingResults && (
             <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">
                 Prediction Result
@@ -306,7 +358,6 @@ export default function App() {
             </div>
           )}
         </section>
-        
       </main>
     </div>
   );
