@@ -1,24 +1,37 @@
+#%% md
+# # Vehicle Classification using Machine Learning
+# 
+# This notebook implements a vehicle classification system using multiple machine learning models and computer vision techniques. It processes images using HOG (Histogram of Oriented Gradients) and LBP (Local Binary Patterns) features, then trains and compares different classifiers.
+# 
+#%% md
+# ## 1. Import Required Libraries
+# 
+#%%
 import os
 import cv2
 import numpy as np
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, precision_score, recall_score, f1_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from skimage.feature import local_binary_pattern
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 import glob
-from sklearn.utils import shuffle
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
 import multiprocessing as mp
+import joblib
 import pandas as pd
-import time
 
 
+#%% md
+# ## 2. Helper Functions
+# ### 2.1 Data Management Functions
+# 
+#%%
 def save_features_to_csv(features, labels, filename):
     """Save features and labels to a CSV file."""
     df = pd.DataFrame(features)
@@ -35,52 +48,14 @@ def load_features_from_csv(filename):
     return features, labels
 
 
-def visualize_sample_images(images, labels, class_labels, num_samples=5):
-    """Visualize a few sample images from the dataset."""
-    plt.figure(figsize=(10, 10))
-    for i in range(num_samples):
-        plt.subplot(1, num_samples, i + 1)
-        plt.imshow(images[i], cmap='gray')
-        plt.title(class_labels[labels[i]])
-        plt.axis('off')
-    plt.show()
-
-
-def visualize_hog_features(img):
-    """Visualize HOG features on an image."""
-    hog = cv2.HOGDescriptor((64, 64), (16, 16), (8, 8), (8, 8), 9)
-
-    # If the image is already grayscale, skip the conversion
-    if img.ndim == 3:  # 3 channels (BGR), need conversion
-        img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    else:  # Single channel (grayscale)
-        img_gray = img
-
-    h = hog.compute(img_gray)
-
-    # Reshape and plot HOG features
-    plt.imshow(img_gray, cmap='gray')
-    plt.title("HOG Features Visualization")
-    plt.show()
-
-
-
-def visualize_lbp_features(img):
-    """Visualize LBP features on an image."""
-    radius = 3
-    n_points = 24
-    lbp = local_binary_pattern(img, n_points, radius, method='uniform')
-
-    plt.imshow(lbp, cmap='gray')
-    plt.title("LBP Features Visualization")
-    plt.show()
-
-
+#%% md
+# ### 2.2 Image Processing Functions
+# 
+#%%
 def process_image(args):
     """Process a single image (helper for multiprocessing)."""
     img_path, class_idx = args
     try:
-        # Normalize path separators for the operating system
         img_path = os.path.normpath(img_path)
         img = cv2.imread(img_path)
         if img is None:
@@ -93,51 +68,69 @@ def process_image(args):
         print(f"Error processing {img_path}: {str(e)}")
         return None, None
 
-
+# Modified version of load_images_from_folder
 def load_images_from_folder(folder, class_labels):
-    """Load and process images from a folder using multiprocessing."""
-    # Normalize the base folder path
+    """Load and process images from a folder."""
     folder = os.path.normpath(folder)
-
-    # Create list of image paths and their corresponding labels
+    
     image_paths = []
     for idx, label in enumerate(class_labels):
         class_folder = os.path.join(folder, label)
         if not os.path.exists(class_folder):
             print(f"Warning: Folder not found - {class_folder}")
             continue
-
-        # Look for both .jpg and .jpeg files
+            
         for ext in ['*.jpg', '*.jpeg']:
             pattern = os.path.join(class_folder, ext)
             image_paths.extend([(os.path.normpath(f), idx)
-                                for f in glob.glob(pattern)])
-
+                              for f in glob.glob(pattern)])
+    
     if not image_paths:
         raise ValueError(f"No images found in {folder}")
-
+        
     print(f"Found {len(image_paths)} images...")
-
-    # Process images in parallel
-    with mp.Pool(processes=mp.cpu_count()) as pool:
-        results = list(tqdm(pool.imap(process_image, image_paths), total=len(image_paths)))
-
-    # Filter out None results and separate images and labels
-    valid_results = [(img, label) for img, label in results if img is not None]
-
-    if not valid_results:
+    
+    # Process images sequentially with progress bar
+    images = []
+    labels = []
+    for img_path, class_idx in tqdm(image_paths, desc="Processing images"):
+        try:
+            img = cv2.imread(img_path)
+            if img is not None:
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                img = cv2.resize(img, (64, 64))
+                images.append(img)
+                labels.append(class_idx)
+        except Exception as e:
+            print(f"Error processing {img_path}: {str(e)}")
+            continue
+    
+    if not images:
         raise ValueError("No valid images were processed successfully")
-
-    images, labels = zip(*valid_results)
+        
     return np.array(images), np.array(labels)
 
 
+#%% md
+# ### 2.3 Feature Extraction Functions
+# 
+#%%
+# def extract_features_parallel(images, feature_func):
+#     """Extract features from images using multiprocessing."""
+#     with mp.Pool(processes=mp.cpu_count()) as pool:
+#         features = list(tqdm(pool.imap(feature_func, images), total=len(images)))
+#     return np.array(features)
+
+# Modified version of extract_features_parallel
 def extract_features_parallel(images, feature_func):
     """Extract features from images using multiprocessing."""
-    with mp.Pool(processes=mp.cpu_count()) as pool:
-        features = list(tqdm(pool.imap(feature_func, images), total=len(images)))
+    print(f"Extracting features from {len(images)} images...")
+    
+    # For smaller datasets or when running on laptop, use basic loop with tqdm
+    features = []
+    for img in tqdm(images, desc="Extracting features"):
+        features.append(feature_func(img))
     return np.array(features)
-
 
 def extract_hog_features(img):
     """Extract Histogram of Oriented Gradients (HOG) features from an image."""
@@ -154,99 +147,303 @@ def extract_lbp_features(image, radius=3, n_points=24):
     return hist
 
 
-def train_and_evaluate_model(model, X_train, X_val, y_train, y_val, model_name, class_labels):
+#%% md
+# ### 2.4 Model Training and Evaluation Functions
+# 
+#%%
+def train_and_evaluate_model(model, X_train, X_val, y_train, y_val, model_name, class_labels, results):
     """Train a model and evaluate its performance."""
     print(f"\nTraining {model_name}...")
-    start_time = time.time()
+    
+    # Train the model
     model.fit(X_train, y_train)
-    y_pred = model.predict(X_val)
 
-    # Evaluate and display results
-    accuracy = accuracy_score(y_val, y_pred)
-    print(f"{model_name} Accuracy: {accuracy * 100:.2f}%")
+    # Calculate validation predictions
+    y_pred = model.predict(X_val)
+    
+    # Calculate metrics
+    val_accuracy = accuracy_score(y_val, y_pred)
+    val_precision = precision_score(y_val, y_pred, average='macro')
+    val_recall = recall_score(y_val, y_pred, average='macro')
+    val_f1 = f1_score(y_val, y_pred, average='macro')
+
+    print(f"{model_name} Validation Metrics:")
+    print(f"Accuracy: {val_accuracy * 100:.2f}%")
+    print(f"Precision: {val_precision * 100:.2f}%")
+    print(f"Recall: {val_recall * 100:.2f}%")
+    print(f"F1-Score: {val_f1 * 100:.2f}%")
+    print("\nDetailed Classification Report:")
     print(classification_report(y_val, y_pred, target_names=class_labels))
 
-    # Plot and save confusion matrix
+    # Confusion matrix
     conf_matrix = confusion_matrix(y_val, y_pred)
-    sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", xticklabels=class_labels, yticklabels=class_labels)
-    plt.title(f"Confusion Matrix - {model_name}")
-    plt.xlabel("Predicted")
-    plt.ylabel("True")
-    plt.close()
+    plt.figure(figsize=(10, 7))
+    sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues",
+                xticklabels=class_labels, yticklabels=class_labels, cbar=False)
+    plt.title(f"Confusion Matrix - {model_name}", fontsize=16)
+    plt.xlabel("Predicted", fontsize=14)
+    plt.ylabel("True", fontsize=14)
+    plt.tight_layout()
+    plt.show()
 
-    return model, accuracy
-
-
-def main():
-    # Use absolute paths or relative paths from script location
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    train_data_path = os.path.normpath(os.path.join(script_dir, '..', 'datasets', 'train'))
-    val_data_path = os.path.normpath(os.path.join(script_dir, '..', 'datasets', 'val'))
-
-    # Verify paths exist
-    if not os.path.exists(train_data_path):
-        raise ValueError(f"Training data path not found: {train_data_path}")
-    if not os.path.exists(val_data_path):
-        raise ValueError(f"Validation data path not found: {val_data_path}")
-
-    # Load class labels from existing directories only
-    class_labels = [d for d in os.listdir(train_data_path)
-                    if os.path.isdir(os.path.join(train_data_path, d))]
-    print(f"Found classes: {class_labels}")
-
-    # Check for precomputed features
-    if os.path.exists('train_features.csv') and os.path.exists('val_features.csv'):
-        print("Loading precomputed features...")
-        X_train, y_train = load_features_from_csv('train_features.csv')
-        X_val, y_val = load_features_from_csv('val_features.csv')
-    else:
-        # Process and load images
-        print("Loading and processing images...")
-        X_train, y_train = load_images_from_folder(train_data_path, class_labels)
-        X_val, y_val = load_images_from_folder(val_data_path, class_labels)
-
-        # Visualize a few sample images from the training dataset
-        visualize_sample_images(X_train, y_train, class_labels)
-
-        # Extract features (HOG + LBP)
-        X_train_hog = extract_features_parallel(X_train, extract_hog_features)
-        X_val_hog = extract_features_parallel(X_val, extract_hog_features)
-        X_train_lbp = extract_features_parallel(X_train, extract_lbp_features)
-        X_val_lbp = extract_features_parallel(X_val, extract_lbp_features)
-
-        # Visualize HOG features for the first image in the training set
-        visualize_hog_features(X_train[0])
-
-        # Visualize LBP features for the first image in the training set
-        visualize_lbp_features(X_train[0])
-
-        # Combine and save features
-        X_train = np.hstack((X_train_hog, X_train_lbp))
-        X_val = np.hstack((X_val_hog, X_val_lbp))
-        save_features_to_csv(X_train, y_train, 'train_features.csv')
-        save_features_to_csv(X_val, y_val, 'val_features.csv')
-
-    # Scale and reduce dimensionality of features
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_val = scaler.transform(X_val)
-
-    pca = PCA(n_components=100)
-    X_train = pca.fit_transform(X_train)
-    X_val = pca.transform(X_val)
-
-    # Define models
-    models = {
-        'SVM': GridSearchCV(svm.SVC(), {'C': [0.1, 1, 10], 'gamma': ['scale'], 'kernel': ['rbf']}, cv=3),
-        'KNN': GridSearchCV(KNeighborsClassifier(), {'n_neighbors': [3, 5, 7], 'weights': ['uniform', 'distance']},
-                            cv=3),
-        'Naive Bayes': GaussianNB()
+    results[model_name] = {
+        'val_accuracy': val_accuracy,
+        'val_precision': val_precision,
+        'val_recall': val_recall,
+        'val_f1': val_f1,
+        'conf_matrix': conf_matrix,
+        'model': model
     }
 
-    # Train and evaluate models
-    for model_name, model in models.items():
-        train_and_evaluate_model(model, X_train, X_val, y_train, y_val, model_name, class_labels)
+    return model
+
+def plot_model_comparison(results):
+    """Plot validation metrics comparison for models."""
+    model_names = list(results.keys())
+    metrics = {
+        'Accuracy': [results[model]['val_accuracy'] * 100 for model in model_names],
+        'Precision': [results[model]['val_precision'] * 100 for model in model_names],
+        'Recall': [results[model]['val_recall'] * 100 for model in model_names],
+        'F1-Score': [results[model]['val_f1'] * 100 for model in model_names]
+    }
+    
+    # Set up the plot
+    plt.figure(figsize=(15, 8))
+    x = np.arange(len(model_names))
+    width = 0.2  # Width of bars
+    
+    # Plot bars for each metric
+    bars = []
+    for i, (metric, values) in enumerate(metrics.items()):
+        position = x + (i - 1.5) * width
+        bar = plt.bar(position, values, width, label=metric)
+        bars.append(bar)
+    
+    plt.title('Model Performance Metrics Comparison', fontsize=16, fontweight='bold')
+    plt.ylabel('Percentage (%)', fontsize=14)
+    plt.xlabel('Models', fontsize=14, labelpad=10)
+    plt.xticks(x, model_names, fontweight='bold')
+    plt.ylim(0, 100)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    # Adding values on top of the bars
+    for bar_group in bars:
+        for bar in bar_group:
+            height = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width()/2, height,
+                    f'{round(height, 1)}%',
+                    ha='center', va='bottom',
+                    fontsize=12)
+
+    plt.tight_layout()
+    plt.show()
+#%% md
+# ### 2.5 Prediction and Visualization Function
+# 
+#%%
+def predict_and_visualize(image_path, model, scaler, pca, class_labels):
+    """Predict the class of a single image and visualize the results."""
+    # Load and process the image
+    img = cv2.imread(image_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    # Display original image
+    plt.figure(figsize=(10, 5))
+    plt.subplot(1, 2, 1)
+    plt.imshow(img)
+    plt.title("Original Image")
+    plt.axis('off')
+
+    # Process image for prediction
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_resized = cv2.resize(img_gray, (64, 64))
+
+    # Extract features
+    hog_features = extract_hog_features(img_resized)
+    lbp_features = extract_lbp_features(img_resized)
+    features = np.hstack((hog_features, lbp_features))
+
+    # Preprocess features
+    features_scaled = scaler.transform(features.reshape(1, -1))
+    features_pca = pca.transform(features_scaled)
+
+    # Make prediction
+    prediction = model.predict(features_pca)
+    prediction_proba = model.predict_proba(features_pca)[0] if hasattr(model, 'predict_proba') else None
+
+    # Visualize prediction results
+    plt.subplot(1, 2, 2)
+    if prediction_proba is not None:
+        y_pos = np.arange(len(class_labels))
+        plt.barh(y_pos, prediction_proba)
+        plt.yticks(y_pos, class_labels)
+        plt.xlabel('Probability')
+        plt.title('Prediction Probabilities')
+    else:
+        plt.text(0.5, 0.5, f'Predicted Class:\n{class_labels[prediction[0]]}',
+                 ha='center', va='center', fontsize=12)
+        plt.axis('off')
+
+    plt.tight_layout()
+    plt.show()
+
+    return class_labels[prediction[0]]
 
 
-if __name__ == "__main__":
-    main()
+#%% md
+# ## 3. Main Process
+# ### 3.1 Data Loading and Feature Extraction
+# 
+#%%
+# Paths to dataset
+train_data_path = '../datasets/train'
+val_data_path = '../datasets/val'
+train_features_path = 'features/train_features.csv'
+val_features_path = 'features/val_features.csv'
+
+if not os.path.exists('features'):
+    os.makedirs('features')
+
+# Load class labels
+class_labels = [d for d in os.listdir(train_data_path)
+                if os.path.isdir(os.path.join(train_data_path, d))]
+print(f"Found classes: {class_labels}")
+
+# Feature extraction or loading
+if os.path.exists(train_data_path) and os.path.exists(val_features_path):
+    print("Loading precomputed features...")
+    X_train, y_train = load_features_from_csv(train_features_path)
+    X_val, y_val = load_features_from_csv(val_features_path)
+else:
+    print("Loading and processing images...")
+    X_train, y_train = load_images_from_folder(train_data_path, class_labels)
+    X_val, y_val = load_images_from_folder(val_data_path, class_labels)
+
+    # Extract features (HOG + LBP)
+    X_train_hog = extract_features_parallel(X_train, extract_hog_features)
+    X_val_hog = extract_features_parallel(X_val, extract_hog_features)
+    X_train_lbp = extract_features_parallel(X_train, extract_lbp_features)
+    X_val_lbp = extract_features_parallel(X_val, extract_lbp_features)
+
+    # Combine and save features
+    X_train = np.hstack((X_train_hog, X_train_lbp))
+    X_val = np.hstack((X_val_hog, X_val_lbp))
+    save_features_to_csv(X_train, y_train, train_features_path)
+    save_features_to_csv(X_val, y_val, val_features_path)
+
+#%% md
+# ### 3.2 Feature Preprocessing
+# 
+#%%
+# Feature scaling
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_val_scaled = scaler.transform(X_val)
+
+# Dimensionality reduction
+pca = PCA(n_components=100)
+X_train_pca = pca.fit_transform(X_train_scaled)
+X_val_pca = pca.transform(X_val_scaled)
+
+#%% md
+# ### 3.3 Model Training and Evaluation
+# 
+#%%
+# Define models
+models = {
+    'SVM': GridSearchCV(svm.SVC(probability=True),
+                        {'C': [0.1, 1, 10],
+                         'gamma': ['scale'],
+                         'kernel': ['rbf']},
+                        cv=3),
+    'KNN': GridSearchCV(KNeighborsClassifier(),
+                        {'n_neighbors': [3, 5, 7],
+                         'weights': ['uniform', 'distance']},
+                        cv=3),
+    'Naive Bayes': GaussianNB()
+}
+
+# Train and evaluate models
+results = {}
+for model_name, model in models.items():
+    if isinstance(model, GridSearchCV):
+        model.fit(X_train_pca, y_train)
+        best_model = model.best_estimator_
+        train_and_evaluate_model(best_model, X_train_pca, X_val_pca,
+                                 y_train, y_val, model_name, class_labels, results)
+    else:
+        train_and_evaluate_model(model, X_train_pca, X_val_pca,
+                                 y_train, y_val, model_name, class_labels, results)
+
+# Plot model comparison
+plot_model_comparison(results)
+
+#%% md
+# ### 3.4 Get Best Model and Make Predictions
+# 
+#%%
+# Get the best model based on accuracy
+best_model_name = max(results.keys(), key=lambda k: results[k]['val_accuracy'])
+best_model = results[best_model_name]['model']
+print(f"\nBest model: {best_model_name}")
+print(f"Best model accuracy: {results[best_model_name]['val_accuracy']*100:.2f}%")
+
+#%% md
+# ### 3.5 Example Usage of Prediction
+# 
+# Below is an example of how to use the trained model to predict the class of a new image. Replace `'path_to_test_image.jpg'` with the path to your test image.
+# 
+#%%
+# Example prediction
+test_image_path = '../datasets/val/SUV/1c8ca620a06bf9ad124c29c180d95a6b.jpg'
+prediction = predict_and_visualize(test_image_path, best_model, scaler, pca, class_labels)
+print(f"\nPredicted vehicle class: {prediction}")
+
+
+#%% md
+# ## 4. Saving the Model and Preprocessors
+#%%
+if not os.path.exists('models_preprocessors'):
+    os.makedirs('models_preprocessors')
+
+# Save the model and preprocessors
+best_model_save_path = f"models_preprocessors/{best_model_name}_Classifier.joblib"
+scaler_save_path = 'models_preprocessors/feature_scaler.joblib'
+pca_save_path = 'models_preprocessors/pca_transformer.joblib'
+
+joblib.dump(best_model, best_model_save_path)
+joblib.dump(scaler, scaler_save_path)
+joblib.dump(pca, pca_save_path)
+
+print("Model and preprocessors saved successfully!")
+
+#%% md
+# ## 5. Loading and Using the Saved Model
+#  
+# To load and use the saved model later:
+# 
+#%%
+# Load the saved model and preprocessors
+loaded_model = joblib.load(best_model_save_path)
+loaded_scaler = joblib.load(scaler_save_path)
+loaded_pca = joblib.load(pca_save_path)
+
+# Use the loaded model for predictions
+test_image_path = '../datasets/val/family sedan/98b83106dcaeeb585913fb59c8525757.jpg'
+prediction = predict_and_visualize(test_image_path, 
+                                 loaded_model, 
+                                 loaded_scaler, 
+                                 loaded_pca, 
+                                 class_labels)
+print(f"\nPredicted vehicle class: {prediction}")
+#%% md
+# ## 6. Conclusion
+# 
+# This notebook demonstrates a complete pipeline for vehicle classification:
+# 1. Image processing and feature extraction using HOG and LBP
+# 2. Feature preprocessing with standardization and PCA
+# 3. Model training and evaluation with multiple classifiers
+# 4. Prediction visualization for new images
+# 
+# The best performing model can be used for real-world vehicle classification tasks. The saved model can be easily loaded and integrated into other applications.

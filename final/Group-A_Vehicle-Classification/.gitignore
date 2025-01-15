@@ -1,6 +1,12 @@
 # Ignore the dataset directory
 datasets
 
+# Ignore the model directory
+models_preprocessors
+
+# Ignore the feature directory
+features
+
 # Ignore Python bytecode files
 *.pyc
 *.pyo
