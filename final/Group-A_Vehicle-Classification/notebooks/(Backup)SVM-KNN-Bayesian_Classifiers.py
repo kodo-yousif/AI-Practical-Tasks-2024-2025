@@ -33,7 +33,6 @@ import pandas as pd
 # 
 #%%
 def save_features_to_csv(features, labels, filename):
-    """Save features and labels to a CSV file."""
     df = pd.DataFrame(features)
     df['label'] = labels
     df.to_csv(filename, index=False)
@@ -41,7 +40,6 @@ def save_features_to_csv(features, labels, filename):
 
 
 def load_features_from_csv(filename):
-    """Load features and labels from a CSV file."""
     df = pd.read_csv(filename)
     labels = df['label'].values
     features = df.drop('label', axis=1).values
@@ -68,7 +66,6 @@ def process_image(args):
         print(f"Error processing {img_path}: {str(e)}")
         return None, None
 
-# Modified version of load_images_from_folder
 def load_images_from_folder(folder, class_labels):
     """Load and process images from a folder."""
     folder = os.path.normpath(folder)
@@ -121,26 +118,21 @@ def load_images_from_folder(folder, class_labels):
 #         features = list(tqdm(pool.imap(feature_func, images), total=len(images)))
 #     return np.array(features)
 
-# Modified version of extract_features_parallel
 def extract_features_parallel(images, feature_func):
-    """Extract features from images using multiprocessing."""
     print(f"Extracting features from {len(images)} images...")
     
-    # For smaller datasets or when running on laptop, use basic loop with tqdm
     features = []
     for img in tqdm(images, desc="Extracting features"):
         features.append(feature_func(img))
     return np.array(features)
 
 def extract_hog_features(img):
-    """Extract Histogram of Oriented Gradients (HOG) features from an image."""
     hog = cv2.HOGDescriptor((64, 64), (16, 16), (8, 8), (8, 8), 9)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if img.ndim == 3 else img
     return hog.compute(img).flatten()
 
 
 def extract_lbp_features(image, radius=3, n_points=24):
-    """Extract Local Binary Patterns (LBP) features from an image."""
     lbp = local_binary_pattern(image, n_points, radius, method='uniform')
     hist, _ = np.histogram(lbp.ravel(), bins=np.arange(0, n_points + 3), range=(0, n_points + 2))
     hist = hist.astype('float') / (hist.sum() + 1e-7)
@@ -152,16 +144,12 @@ def extract_lbp_features(image, radius=3, n_points=24):
 # 
 #%%
 def train_and_evaluate_model(model, X_train, X_val, y_train, y_val, model_name, class_labels, results):
-    """Train a model and evaluate its performance."""
     print(f"\nTraining {model_name}...")
     
-    # Train the model
     model.fit(X_train, y_train)
 
-    # Calculate validation predictions
     y_pred = model.predict(X_val)
     
-    # Calculate metrics
     val_accuracy = accuracy_score(y_val, y_pred)
     val_precision = precision_score(y_val, y_pred, average='macro')
     val_recall = recall_score(y_val, y_pred, average='macro')
@@ -175,7 +163,6 @@ def train_and_evaluate_model(model, X_train, X_val, y_train, y_val, model_name, 
     print("\nDetailed Classification Report:")
     print(classification_report(y_val, y_pred, target_names=class_labels))
 
-    # Confusion matrix
     conf_matrix = confusion_matrix(y_val, y_pred)
     plt.figure(figsize=(10, 7))
     sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues",
@@ -198,7 +185,6 @@ def train_and_evaluate_model(model, X_train, X_val, y_train, y_val, model_name, 
     return model
 
 def plot_model_comparison(results):
-    """Plot validation metrics comparison for models."""
     model_names = list(results.keys())
     metrics = {
         'Accuracy': [results[model]['val_accuracy'] * 100 for model in model_names],
@@ -207,12 +193,10 @@ def plot_model_comparison(results):
         'F1-Score': [results[model]['val_f1'] * 100 for model in model_names]
     }
     
-    # Set up the plot
     plt.figure(figsize=(15, 8))
     x = np.arange(len(model_names))
     width = 0.2  # Width of bars
     
-    # Plot bars for each metric
     bars = []
     for i, (metric, values) in enumerate(metrics.items()):
         position = x + (i - 1.5) * width
@@ -227,7 +211,6 @@ def plot_model_comparison(results):
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 
-    # Adding values on top of the bars
     for bar_group in bars:
         for bar in bar_group:
             height = bar.get_height()
@@ -243,36 +226,28 @@ def plot_model_comparison(results):
 # 
 #%%
 def predict_and_visualize(image_path, model, scaler, pca, class_labels):
-    """Predict the class of a single image and visualize the results."""
-    # Load and process the image
     img = cv2.imread(image_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     
-    # Display original image
     plt.figure(figsize=(10, 5))
     plt.subplot(1, 2, 1)
     plt.imshow(img)
     plt.title("Original Image")
     plt.axis('off')
 
-    # Process image for prediction
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img_resized = cv2.resize(img_gray, (64, 64))
 
-    # Extract features
     hog_features = extract_hog_features(img_resized)
     lbp_features = extract_lbp_features(img_resized)
     features = np.hstack((hog_features, lbp_features))
 
-    # Preprocess features
     features_scaled = scaler.transform(features.reshape(1, -1))
     features_pca = pca.transform(features_scaled)
 
-    # Make prediction
     prediction = model.predict(features_pca)
     prediction_proba = model.predict_proba(features_pca)[0] if hasattr(model, 'predict_proba') else None
 
-    # Visualize prediction results
     plt.subplot(1, 2, 2)
     if prediction_proba is not None:
         y_pos = np.arange(len(class_labels))
@@ -296,21 +271,18 @@ def predict_and_visualize(image_path, model, scaler, pca, class_labels):
 # ### 3.1 Data Loading and Feature Extraction
 # 
 #%%
-# Paths to dataset
 train_data_path = '../datasets/train'
 val_data_path = '../datasets/val'
-train_features_path = 'features/train_features.csv'
-val_features_path = 'features/val_features.csv'
+train_features_path = '../features/train_features.csv'
+val_features_path = '../features/val_features.csv'
 
-if not os.path.exists('features'):
-    os.makedirs('features')
+if not os.path.exists('../features'):
+    os.makedirs('../features')
 
-# Load class labels
 class_labels = [d for d in os.listdir(train_data_path)
                 if os.path.isdir(os.path.join(train_data_path, d))]
 print(f"Found classes: {class_labels}")
 
-# Feature extraction or loading
 if os.path.exists(train_data_path) and os.path.exists(val_features_path):
     print("Loading precomputed features...")
     X_train, y_train = load_features_from_csv(train_features_path)
@@ -320,13 +292,11 @@ else:
     X_train, y_train = load_images_from_folder(train_data_path, class_labels)
     X_val, y_val = load_images_from_folder(val_data_path, class_labels)
 
-    # Extract features (HOG + LBP)
     X_train_hog = extract_features_parallel(X_train, extract_hog_features)
     X_val_hog = extract_features_parallel(X_val, extract_hog_features)
     X_train_lbp = extract_features_parallel(X_train, extract_lbp_features)
     X_val_lbp = extract_features_parallel(X_val, extract_lbp_features)
 
-    # Combine and save features
     X_train = np.hstack((X_train_hog, X_train_lbp))
     X_val = np.hstack((X_val_hog, X_val_lbp))
     save_features_to_csv(X_train, y_train, train_features_path)
@@ -336,12 +306,10 @@ else:
 # ### 3.2 Feature Preprocessing
 # 
 #%%
-# Feature scaling
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_val_scaled = scaler.transform(X_val)
 
-# Dimensionality reduction
 pca = PCA(n_components=100)
 X_train_pca = pca.fit_transform(X_train_scaled)
 X_val_pca = pca.transform(X_val_scaled)
@@ -350,7 +318,6 @@ X_val_pca = pca.transform(X_val_scaled)
 # ### 3.3 Model Training and Evaluation
 # 
 #%%
-# Define models
 models = {
     'SVM': GridSearchCV(svm.SVC(probability=True),
                         {'C': [0.1, 1, 10],
@@ -364,7 +331,6 @@ models = {
     'Naive Bayes': GaussianNB()
 }
 
-# Train and evaluate models
 results = {}
 for model_name, model in models.items():
     if isinstance(model, GridSearchCV):
@@ -376,14 +342,12 @@ for model_name, model in models.items():
         train_and_evaluate_model(model, X_train_pca, X_val_pca,
                                  y_train, y_val, model_name, class_labels, results)
 
-# Plot model comparison
 plot_model_comparison(results)
 
 #%% md
 # ### 3.4 Get Best Model and Make Predictions
 # 
 #%%
-# Get the best model based on accuracy
 best_model_name = max(results.keys(), key=lambda k: results[k]['val_accuracy'])
 best_model = results[best_model_name]['model']
 print(f"\nBest model: {best_model_name}")
@@ -392,10 +356,9 @@ print(f"Best model accuracy: {results[best_model_name]['val_accuracy']*100:.2f}%
 #%% md
 # ### 3.5 Example Usage of Prediction
 # 
-# Below is an example of how to use the trained model to predict the class of a new image. Replace `'path_to_test_image.jpg'` with the path to your test image.
+# Below is an example of how to use the trained model to predict the class of a new image.
 # 
 #%%
-# Example prediction
 test_image_path = '../datasets/val/SUV/1c8ca620a06bf9ad124c29c180d95a6b.jpg'
 prediction = predict_and_visualize(test_image_path, best_model, scaler, pca, class_labels)
 print(f"\nPredicted vehicle class: {prediction}")
@@ -404,13 +367,12 @@ print(f"\nPredicted vehicle class: {prediction}")
 #%% md
 # ## 4. Saving the Model and Preprocessors
 #%%
-if not os.path.exists('models_preprocessors'):
-    os.makedirs('models_preprocessors')
+if not os.path.exists('../models_preprocessors'):
+    os.makedirs('../models_preprocessors')
 
-# Save the model and preprocessors
-best_model_save_path = f"models_preprocessors/{best_model_name}_Classifier.joblib"
-scaler_save_path = 'models_preprocessors/feature_scaler.joblib'
-pca_save_path = 'models_preprocessors/pca_transformer.joblib'
+best_model_save_path = f"../models_preprocessors/{best_model_name}_Classifier.joblib"
+scaler_save_path = '../models_preprocessors/feature_scaler.joblib'
+pca_save_path = '../models_preprocessors/pca_transformer.joblib'
 
 joblib.dump(best_model, best_model_save_path)
 joblib.dump(scaler, scaler_save_path)
@@ -424,12 +386,10 @@ print("Model and preprocessors saved successfully!")
 # To load and use the saved model later:
 # 
 #%%
-# Load the saved model and preprocessors
 loaded_model = joblib.load(best_model_save_path)
 loaded_scaler = joblib.load(scaler_save_path)
 loaded_pca = joblib.load(pca_save_path)
 
-# Use the loaded model for predictions
 test_image_path = '../datasets/val/family sedan/98b83106dcaeeb585913fb59c8525757.jpg'
 prediction = predict_and_visualize(test_image_path, 
                                  loaded_model, 
@@ -445,5 +405,3 @@ print(f"\nPredicted vehicle class: {prediction}")
 # 2. Feature preprocessing with standardization and PCA
 # 3. Model training and evaluation with multiple classifiers
 # 4. Prediction visualization for new images
-# 
-# The best performing model can be used for real-world vehicle classification tasks. The saved model can be easily loaded and integrated into other applications.
