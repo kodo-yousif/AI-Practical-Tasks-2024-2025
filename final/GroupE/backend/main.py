@@ -16,15 +16,23 @@ import uvicorn
 from typing import List
 from joblib import Parallel, delayed
 import math
-import json
-import time 
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
 import torch.nn.functional as F
 
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+data = None
+scaler = None
+trained_models = {}
 class TrainRequest(BaseModel):
     validation_method: str
-    model_type: str = "kNN"
 
 class PredictRequest(BaseModel):
     data_row: List[float]
@@ -47,25 +55,7 @@ class DiabetesNN(nn.Module):
         x = torch.sigmoid(self.fc3(x))
         return x
 
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-data = None
-scaler = None
-trained_models = {}
-
-model_status = {
-    "kNN": "not_trained",
-    "Bayesian": "not_trained",
-    "SVM": "not_trained",
-    "Neural": "not_trained"
-}
 
 def train_neural_network(model, X_train, y_train, X_test, y_test, epochs=100, batch_size=32):
     criterion = nn.BCELoss()
@@ -151,6 +141,7 @@ def load_model(model_name):
 def evaluate_model(model, X_test, y_test):
     try:
         if isinstance(model, DiabetesNN):
+            print()
             model.eval()
             with torch.no_grad():
                 X_tensor = torch.FloatTensor(X_test)
@@ -167,13 +158,21 @@ def evaluate_model(model, X_test, y_test):
             "recall": float(recall_score(y_test, predictions, zero_division=0)),
             "f1_score": float(f1_score(y_test, predictions, zero_division=0))
         }
-
         if probas is not None:
-            if isinstance(probas, np.ndarray) and len(probas.shape) > 1:
-                probas = probas[:, 1]
+            # For binary classification (single output probability)
+            if isinstance(probas, np.ndarray) and len(probas.shape) == 1:
+                probas = probas  # Use the single output as-is
+            elif isinstance(probas, np.ndarray) and probas.shape[1] == 1:
+                probas = probas[:, 0]  # Use the first column if it's reshaped as a 2D array
+            elif isinstance(probas, np.ndarray) and probas.shape[1] > 1:
+                probas = probas[:, 1]  # Use the second column for positive class probabilities
+            else:
+                raise ValueError("Unexpected shape for model output probabilities.")
+
             metrics["roc_auc"] = float(roc_auc_score(y_test, probas))
         else:
             metrics["roc_auc"] = 0.0
+
 
         metrics = {k: (v if not math.isnan(v) else 0.0) for k, v in metrics.items()}
         return metrics
@@ -201,12 +200,6 @@ async def startup_event():
     if not load_data():
         raise HTTPException(status_code=500, detail="Failed to load initial data")
 
-@app.get("/startup")
-async def startup_status():
-    if data is not None:
-        return {"status": "Model loaded successfully"}
-    else:
-        raise HTTPException(status_code=500, detail="Model not loaded")
 
 @app.post("/train")
 async def train_endpoint(request: TrainRequest):
@@ -232,6 +225,7 @@ async def train_endpoint(request: TrainRequest):
                     model.fit(X_train, y_train)
                 
                 metrics = evaluate_model(model, X_test, y_test)
+                print(metrics)
                 results[name] = {
                     key: float(value) if not math.isnan(float(value)) else 0.0
                     for key, value in metrics.items()
@@ -277,45 +271,6 @@ async def train_endpoint(request: TrainRequest):
                     for key in metrics_sum
                 }
                 
-                save_model(model, name)
-
-            return results
-
-        elif validation_method == "leave-one-out":
-            if len(X) > 1000:
-                raise HTTPException(status_code=400, detail="LOO is computationally expensive for large datasets")
-
-            loo = LeaveOneOut()
-            results = {}
-
-            for name, model in models.items():
-                if isinstance(model, DiabetesNN):
-                    continue  # Skip neural network for LOO due to computational intensity
-
-                fold_results = Parallel(n_jobs=-1)(delayed(evaluate_fold)(
-                    model, X[train_index], X[test_index], y[train_index], y[test_index]
-                ) for train_index, test_index in loo.split(X))
-
-                metrics_sum = {
-                    "accuracy": 0.0,
-                    "precision": 0.0,
-                    "recall": 0.0,
-                    "f1_score": 0.0,
-                    "roc_auc": 0.0
-                }
-                valid_counts = {key: 0 for key in metrics_sum}
-
-                for fold_metrics in fold_results:
-                    for key in metrics_sum:
-                        if fold_metrics[key] is not None and not math.isnan(fold_metrics[key]):
-                            metrics_sum[key] += fold_metrics[key]
-                            valid_counts[key] += 1
-
-                results[name] = {
-                    key: float(metrics_sum[key] / valid_counts[key] if valid_counts[key] > 0 else 0.0)
-                    for key in metrics_sum
-                }
-
                 save_model(model, name)
 
             return results
@@ -373,14 +328,6 @@ async def predict_endpoint(request: PredictRequest):
                 detail=f"Model {request.model_type} needs to be trained first. Please call /train endpoint."
             )
         raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/models/status")
-async def get_models_status():
-    status = {}
-    for model_name in ["kNN", "Bayesian", "SVM", "Neural"]:
-        model = load_model(model_name)
-        status[model_name] = "trained" if model is not None else "not trained"
-    return status
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8080)
@@ -457,6 +404,3 @@ if __name__ == "__main__":
 # Definition: ROC-AUC measures the ability of a model to distinguish between positive and negative classes. It calculates the area under the ROC curve, where:
 # True Positive Rate (Recall) is plotted on the y-axis.
 # False Positive Rate (1 - Specificity) is plotted on the x-axis.
-
-
-
