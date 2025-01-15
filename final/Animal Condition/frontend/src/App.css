@@ -1,0 +1,17 @@
+
+.best-model-row {
+    background-color: #f6ffed !important; 
+  }
+  
+  .cell-high-f1 {
+    background-color: #e6fffb;
+  }
+  .cell-mid-f1 {
+    background-color: #fffbe6;
+  }
+  .cell-low-f1 {
+    background-color: #fff1f0;
+  }
+  
+
+  
