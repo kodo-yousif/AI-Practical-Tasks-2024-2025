@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sklearn.model_selection import train_test_split, KFold, LeaveOneOut
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -28,6 +28,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 data = None
 scaler = None
 trained_models = {}
@@ -43,6 +44,9 @@ class DiabetesNN(nn.Module):
     def __init__(self, input_size):
         super(DiabetesNN, self).__init__()
         self.fc1 = nn.Linear(input_size, 16)
+        
+        # Increase numbers if your model is underfitting (not learning well).
+        # Decrease numbers if your model is overfitting (learning too well on training data but failing on unseen data) or if training is too slow.
         self.fc2 = nn.Linear(16, 8)
         self.fc3 = nn.Linear(8, 1)
         self.dropout = nn.Dropout(0.3)
@@ -56,8 +60,42 @@ class DiabetesNN(nn.Module):
         return x
 
 
-
 def train_neural_network(model, X_train, y_train, X_test, y_test, epochs=100, batch_size=32):
+    
+    # epochs: Number of complete passes through the training dataset.
+    # Higher values allow the model to learn more but can lead to overfitting.
+
+    # batch_size: Number of samples processed at once during training.
+    # Smaller values lead to finer weight updates (more noise but better generalization).
+    # Larger values make training faster but may miss local minima.
+    # Smaller batches require less memory but may increase training time.
+    
+    # Parameters:
+    # Trains the neural network using binary cross-entropy loss and Adam optimizer.
+    # model: The neural network instance (DiabetesNN) to be trained.
+    # X_train: Training input features as a NumPy array.
+    # y_train: Training labels as a NumPy array.
+    # X_test: Testing input features (used for evaluation after training).
+    # y_test: Testing labels (used for evaluation after training).
+    # epochs: Number of training epochs (default: 100).
+    # batch_size: Size of the mini-batches (default: 32).
+    
+    # Dataset and DataLoader:
+    # Converts X_train and y_train to PyTorch tensors.
+
+    # Training Loop:
+    # For each epoch:
+    # Iterate through batches of data from the DataLoader.
+    # Forward pass: Compute predictions using the model.
+    # Compute loss: Compare predictions to actual labels.
+    # Backpropagation: Calculate gradients and update model weights.
+    # Accumulate total loss for monitoring.
+    
+    # Evaluation:
+    # Sets the model to evaluation mode (model.eval()).
+    # Makes predictions on X_test and thresholds outputs to generate binary classifications (> 0.5 → class 1).
+    # Returns predictions and raw probabilities.
+    
     criterion = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     
@@ -138,8 +176,19 @@ def load_model(model_name):
     except FileNotFoundError:
         return None
 
+# Evaluates the model on the test data using metrics like accuracy, precision, recall, etc.
 def evaluate_model(model, X_test, y_test):
+    # model: The model to evaluate (either DiabetesNN or a traditional ML model like k-NN).
+    # X_test: Test input features.
+    # y_test: Test labels.
+    
+    
     try:
+        # Neural Network Evaluation:
+        # If the model is an instance of DiabetesNN:
+        # Sets the model to evaluation mode (model.eval()).
+        # Uses the test features (X_test) to make predictions.
+        # Converts outputs to binary predictions (> 0.5) and retrieves probabilities.
         if isinstance(model, DiabetesNN):
             print()
             model.eval()
@@ -149,9 +198,19 @@ def evaluate_model(model, X_test, y_test):
                 predictions = (outputs > 0.5).float().numpy().flatten()
                 probas = outputs.numpy()
         else:
+            # Traditional Model Evaluation:
+
+            # For models like kNN, SVM, or Naive Bayes:
+            # Calls model.predict for predictions.
+            # If the model supports probability output (predict_proba), retrieves probabilities for positive class.
             predictions = model.predict(X_test)
             probas = model.predict_proba(X_test) if hasattr(model, "predict_proba") else None
 
+        # accuracy: Fraction of correct predictions.
+        # precision: Positive predictive value.
+        # recall: True positive rate.
+        # f1_score: Harmonic mean of precision and recall.
+        # roc_auc: Area under the ROC curve (requires probabilities).
         metrics = {
             "accuracy": float(accuracy_score(y_test, predictions)),
             "precision": float(precision_score(y_test, predictions, zero_division=0)),
@@ -187,19 +246,10 @@ def evaluate_model(model, X_test, y_test):
             "roc_auc": 0.0
         }
 
-def evaluate_fold(model, X_train, X_test, y_train, y_test):
-    if isinstance(model, DiabetesNN):
-        predictions, _ = train_neural_network(model, X_train, y_train, X_test, y_test)
-        return evaluate_model(model, X_test, y_test)
-    else:
-        model.fit(X_train, y_train)
-        return evaluate_model(model, X_test, y_test)
-
 @app.on_event("startup")
 async def startup_event():
     if not load_data():
         raise HTTPException(status_code=500, detail="Failed to load initial data")
-
 
 @app.post("/train")
 async def train_endpoint(request: TrainRequest):
@@ -215,6 +265,12 @@ async def train_endpoint(request: TrainRequest):
         }
 
         if validation_method == "holdout":
+            # Holdout Validation:
+            # Splits data into 80% training and 20% testing = test_size=0.2 (train_test_split).
+            # Trains each model:
+            # For neural networks (DiabetesNN), calls train_neural_network.
+            # For traditional models, uses model.fit.
+            # Evaluates the models on the test set using evaluate_model.
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
             results = {}
 
@@ -235,6 +291,14 @@ async def train_endpoint(request: TrainRequest):
             return results
 
         elif validation_method in ["3-fold", "10-fold"]:
+            # Determines the number of splits (3 or 10).
+            # Initializes metrics to zero for averaging across folds.
+            # For each fold:
+            # Splits data into training and test sets.
+            # Reinitializes the neural network (DiabetesNN) for each fold to prevent parameter leakage.
+            # Trains and evaluates the model on the fold.
+            # Aggregates metrics across all valid folds.
+            # Averages metrics across folds and returns the results.
             n_splits = 3 if validation_method == "3-fold" else 10
             kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
             results = {}
@@ -292,17 +356,17 @@ async def predict_endpoint(request: PredictRequest):
                 detail=f"Model {request.model_type} not found. Please train the model first."
             )
 
-        if len(request.data_row) != 8:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Expected 8 features, got {len(request.data_row)}"
-            )
-
         if scaler is None:
             _, _ = preprocess_data()
             
         data_row_scaled = scaler.transform([request.data_row])
+        
         if request.model_type == "Neural":
+            # Neural Network (DiabetesNN):
+            # Sets the model to evaluation mode (model.eval()).
+            # Converts the scaled input to a PyTorch tensor.
+            # Computes the output probability (output.item()).
+            # Generates a binary prediction (> 0.5 → class 1) and computes class probabilities.
             model.eval()
             with torch.no_grad():
                 input_tensor = torch.FloatTensor(data_row_scaled)
@@ -335,6 +399,9 @@ if __name__ == "__main__":
 
 # sklearn: A library for machine learning that includes algorithms like k-NN, Naive Bayes, and SVM, as well as utility functions for training and evaluation.
 # torch: PyTorch is used to implement a neural network for diabetes prediction.
+
+# torch, torch.nn, etc., are used to define and train deep learning models.
+# pandas: Used for data manipulation and reading CSV files.
 
 # Global Variables
 # data: Stores the diabetes dataset (loaded from a CSV file).
@@ -404,3 +471,9 @@ if __name__ == "__main__":
 # Definition: ROC-AUC measures the ability of a model to distinguish between positive and negative classes. It calculates the area under the ROC curve, where:
 # True Positive Rate (Recall) is plotted on the y-axis.
 # False Positive Rate (1 - Specificity) is plotted on the x-axis.
+
+
+# kNN (KNeighborsClassifier): A k-Nearest Neighbors classifier with n_neighbors=5.
+# Bayesian (GaussianNB): Naive Bayes classifier.
+# SVM (SVC): Support Vector Machine with probability=True to compute probabilities.
+# Neural (DiabetesNN): A custom neural network with 8 input features.

@@ -11,5 +11,8 @@
     border-radius: 10px;
     border: 2px solid transparent;
   }
+}
 
+html{
+  background-color: #0f172a ;
 }

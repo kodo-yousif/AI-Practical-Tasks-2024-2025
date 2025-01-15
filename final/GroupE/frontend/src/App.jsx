@@ -56,6 +56,7 @@ export default function App() {
         }),
       });
 
+      console.log(response)
       if (!response.ok) {
         const errorMessage = await parseError(response);
         throw new Error(errorMessage);
@@ -117,7 +118,7 @@ export default function App() {
   };
 
   return (
-    <div className="h-[100vh] max-h-[100vh] fixed inset-0 flex flex-col items-center justify-center bg-slate-900 px-6 overflow-hidden">
+    <div className="h-[90vh] m-auto fixed inset-0 flex flex-col items-center justify-center bg-slate-900 px-6 overflow-hidden">
       <main className="w-full  bg-slate-300 rounded-xl shadow-lg p-6 overflow-x-hidden overflow-y-auto">
         <header className="text-center mb-8">
           <h1 className="text-4xl text-start font-bold text-blue-950 mb-4">
@@ -125,7 +126,7 @@ export default function App() {
           </h1>
         </header>
 
-        <section className="mb-8 border-2 p-4 rounded-lg border-slate-400">
+        <section className="mb-8 border-2 p-6 rounded-lg border-slate-400">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               Model Training
@@ -231,7 +232,7 @@ export default function App() {
           )}
         </section>
 
-        <section className="p-2 border-2 rounded-lg border-slate-400">
+        <section className="p-6 border-2 rounded-lg border-slate-400">
           <div className="flex items-center justify-between ">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
               Make a Prediction
