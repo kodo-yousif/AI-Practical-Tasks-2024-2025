@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 export default function App() {
@@ -11,6 +11,7 @@ export default function App() {
   const [trainingResults, setTrainingResults] = useState(false);
   const [predictingResults, setPredictingResults] = useState(false);
   const [bestModel, setBestModel] = useState("");
+  const [selectedModel, setSelectedModel] = useState(""); // New state for selected model
 
   const defaultValues = {
     Pregnancies: 6,
@@ -65,6 +66,7 @@ export default function App() {
       const data = await response.json();
       setResults(data[0]);
       setBestModel(data[1]?.name);
+      setSelectedModel(data[1]?.name);
     } catch (err) {
       setError(err.message || "An error occurred during training.");
       console.error("Training error:", err);
@@ -91,7 +93,7 @@ export default function App() {
         },
         body: JSON.stringify({
           data_row: dataRow,
-          model_type: modelType,
+          model_type: selectedModel,
         }),
       });
 
@@ -124,17 +126,12 @@ export default function App() {
     { value: "Neural", label: "Neural Network" },
   ];
 
-  // Sort the models to place the recommended one first
   const sortedModels = models
     .map((model) => ({
       ...model,
-      isRecommended: model.value === bestModel, // Check if the model is recommended
+      isRecommended: model.value === bestModel,
     }))
-    .sort((a, b) => b.isRecommended - a.isRecommended); // Place recommended model at the top
-
-  useEffect(() => {
-    handleTrain();
-  }, []);
+    .sort((a, b) => b.isRecommended - a.isRecommended);
 
   return (
     <div className="h-[90vh] m-auto fixed inset-0 flex flex-col items-center justify-center bg-slate-900 px-6 overflow-hidden">
@@ -321,11 +318,9 @@ export default function App() {
                   Model Type
                 </label>
                 <select
-                  {...register("modelType", {
-                    required: "Model type is required",
-                  })}
+                  onChange={(e) => setSelectedModel(e.target.value)} 
+                  value={selectedModel}
                   className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white"
-                  value={bestModel} // Use value to set the default selected option
                 >
                   {sortedModels.map((model) => (
                     <option
