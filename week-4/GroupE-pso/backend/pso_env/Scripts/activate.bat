@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\ramya\OneDrive\Desktop\ai\week-4\groupe-pso\backend\pso_env
+set VIRTUAL_ENV=C:\Users\ACER PC\Desktop\GroupE\week-4\GroupE-pso\backend\pso_env
 
 if not defined PROMPT set PROMPT=$P$G
 

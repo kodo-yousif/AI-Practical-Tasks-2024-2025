@@ -304,3 +304,31 @@ async def predict_endpoint(request: PredictRequest):
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8080)
 
+# sklearn: A library for machine learning that includes algorithms like k-NN, Naive Bayes, and SVM, as well as utility functions for training and evaluation.
+# torch: PyTorch is used to implement a neural network for diabetes prediction.
+
+# Training: The neural network is trained using back propagation with a loss function (BCELoss), which is suitable for binary classification tasks 
+# (since diabetes prediction is a binary classification problem). The optimizer used is Adam, which adjusts the weights to minimize the loss.
+
+# Evaluation Metrics:
+# Definition: Accuracy is the proportion of correctly classified instances (both true positives and true negatives) out of all the instances in the dataset.
+# it can be misleading when the dataset is imbalanced
+
+# Definition: Precision is the proportion of true positive predictions (correctly predicted instances of the positive class) out of all the instances that the model predicted as positive.
+# It answers the question: Of all the positive predictions, how many were actually positive?
+
+# Definition: Recall is the proportion of true positive predictions (correctly predicted instances of the positive class) out of all the instances that are actually positive in the dataset.
+# It answers the question: Of all the actual positive instances, how many did the model correctly identify?
+
+# F1-Score Definition: The F1-Score is the harmonic mean of Precision and Recall. It is a balanced metric that takes both false positives and false negatives into account, especially useful when the dataset is imbalanced.
+# The F1-Score ranges from 0 to 1, where 1 is the best possible value (perfect precision and recall) and 0 is the worst.
+
+# batch_size: Number of samples processed at once during training.
+# Smaller values lead to finer weight updates (more noise but better generalization).
+# Larger values make training faster but may miss local minima.
+# Smaller batches require less memory but may increase training time.
+    
+# Forward pass: Compute predictions using the model.
+# Compute loss: Compare predictions to actual labels.
+# Backpropagation: Calculate gradients and update model weights.
+# Accumulate total loss for monitoring.
