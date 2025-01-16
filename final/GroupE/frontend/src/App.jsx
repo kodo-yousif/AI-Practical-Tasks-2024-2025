@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 export default function App() {
@@ -10,6 +10,7 @@ export default function App() {
 
   const [trainingResults, setTrainingResults] = useState(false);
   const [predictingResults, setPredictingResults] = useState(false);
+  const [bestModel, setBestModel] = useState("");
 
   const defaultValues = {
     Pregnancies: 6,
@@ -56,15 +57,14 @@ export default function App() {
         }),
       });
 
-      console.log(response)
       if (!response.ok) {
         const errorMessage = await parseError(response);
         throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      console.log(data);
-      setResults(data);
+      setResults(data[0]);
+      setBestModel(data[1]?.name);
     } catch (err) {
       setError(err.message || "An error occurred during training.");
       console.error("Training error:", err);
@@ -116,6 +116,25 @@ export default function App() {
     }
     return value;
   };
+
+  const models = [
+    { value: "kNN", label: "k-Nearest Neighbors" },
+    { value: "Bayesian", label: "Naive Bayes" },
+    { value: "SVM", label: "Support Vector Machine" },
+    { value: "Neural", label: "Neural Network" },
+  ];
+
+  // Sort the models to place the recommended one first
+  const sortedModels = models
+    .map((model) => ({
+      ...model,
+      isRecommended: model.value === bestModel, // Check if the model is recommended
+    }))
+    .sort((a, b) => b.isRecommended - a.isRecommended); // Place recommended model at the top
+
+  useEffect(() => {
+    handleTrain();
+  }, []);
 
   return (
     <div className="h-[90vh] m-auto fixed inset-0 flex flex-col items-center justify-center bg-slate-900 px-6 overflow-hidden">
@@ -305,13 +324,21 @@ export default function App() {
                   {...register("modelType", {
                     required: "Model type is required",
                   })}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none 
-                focus:ring-2 focus:ring-blue-600 bg-white"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 bg-white"
+                  value={bestModel} // Use value to set the default selected option
                 >
-                  <option value="kNN">k-Nearest Neighbors</option>
-                  <option value="Bayesian">Naive Bayes</option>
-                  <option value="SVM">Support Vector Machine</option>
-                  <option value="Neural">Neural Network</option>
+                  {sortedModels.map((model) => (
+                    <option
+                      key={model.value}
+                      value={model.value}
+                      className={
+                        model.isRecommended ? "bg-green-500 text-white" : ""
+                      }
+                    >
+                      {model.label}
+                      {model.isRecommended && " (Recommended)"}
+                    </option>
+                  ))}
                 </select>
               </div>
 
