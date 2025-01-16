@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mammal Classifier</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary-color: #3b82f6;
+            --error-color: #ef4444;
+            --success-color: #22c55e;
+            --background-color: #f8fafc;
+            --text-color: #1e293b;
+            --card-bg: #ffffff;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        select, button, input[type="file"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input[type="file"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        button:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .progress-container {
+            background-color: #e2e8f0;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-bar {
+            height: 0.5rem;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transition: width 0.3s ease-in-out;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            display: none;
+            margin: 1rem 0;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+
+        #imagePreview:hover {
+            transform: scale(1.02);
+        }
+
+        .result {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .success {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .loading-overlay {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--primary-color);
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .metrics-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+
+        .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(5px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        flex-direction: column;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid var(--primary-color);
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+        margin-top: 1rem;
+        color: var(--primary-color);
+        font-weight: 500;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+
+
+        /* Add these new styles for multiple image handling */
+        .image-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .image-preview-item {
+            position: relative;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-image:hover {
+            background: rgb(239, 68, 68);
+        }
+
+        .predictions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .prediction-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .prediction-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .drop-zone {
+            border: 2px dashed #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--primary-color);
+        }
+
+        .drop-zone-text {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .secondary-button {
+            background-color: #94a3b8;
+            color: white;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .secondary-button:hover {
+            background-color: #64748b;
+        }
+
+        .clear-button {
+            background-color: #ef4444;
+        }
+
+        .clear-button:hover {
+            background-color: #dc2626;
+        }
+
+        .submit-button {
+            background-color: var(--primary-color);
+            flex: 2;
+        }
+
+        .image-counter {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .drag-instructions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+        }
+
+        .drag-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .drop-zone.empty {
+            border-style: dashed;
+            background-color: #f8fafc;
+        }
+
+        .drop-zone.has-files {
+            border-style: solid;
+            background-color: #f0f9ff;
+        }
+
+        .prediction-card {
+            transition: transform 0.2s ease;
+        }
+
+        .prediction-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .upload-progress {
+            width: 100%;
+            height: 4px;
+            background-color: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .upload-progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .status-message {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .success-message {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .error-message {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mammal Classifier</h1>
+        
+        <div class="card">
+            <h2>Train Model</h2>
+            <form id="trainForm">
+                <div class="form-group">
+                    <label for="modelSelect">Select Model:</label>
+                    <select id="modelSelect" name="modelType">
+                        <option value="knn">K-Nearest Neighbors</option>
+                        <option value="bayes">Naive Bayes</option>
+                        <option value="svm">Support Vector Machine</option>
+                        <option value="neural">Neural Network</option>
+                    </select>
+                </div>
+                <button type="submit" id="trainButton">Train Model</button>
+                <div class="progress-container" style="display: none;">
+                    <div class="progress-bar"></div>
+                    <div class="progress-text"></div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Make Prediction</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="predictModelSelect">Select Model for Prediction:</label>
+                    <select id="predictModelSelect" name="modelType">
+                        <option value="knn">K-Nearest Neighbors</option>
+                        <option value="bayes">Naive Bayes</option>
+                        <option value="svm">Support Vector Machine</option>
+                        <option value="neural">Neural Network</option>
+                    </select>
+                </div>
+                
+                <div id="imageCounter" class="image-counter" style="display: none;">
+                    Selected Images: <span id="imageCount">0</span>
+                </div>
+    
+                <div class="form-group">
+                    <div class="drop-zone empty" id="dropZone">
+                        <div class="drag-instructions">
+                            <i class="fas fa-cloud-upload-alt drag-icon"></i>
+                            <p class="drop-zone-text">Drag and drop images here</p>
+                            <p>or</p>
+                            <button type="button" class="secondary-button">Browse Files</button>
+                        </div>
+                        <input type="file" name="images[]" id="imageInput" accept="image/*" multiple hidden>
+                    </div>
+                </div>
+    
+                <div id="imagePreviewContainer" class="image-preview-container"></div>
+                
+                <div class="upload-progress" style="display: none;">
+                    <div class="upload-progress-bar" style="width: 0%"></div>
+                </div>
+    
+                <div class="action-buttons">
+                    <button type="button" id="clearButton" class="secondary-button clear-button">
+                        <i class="fas fa-trash-alt"></i> Clear All
+                    </button>
+                    <button type="submit" id="predictButton" class="submit-button">
+                        <i class="fas fa-brain"></i> Predict
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="result"></div>
+        <div id="predictionsContainer" class="predictions-grid"></div>
+
+
+        <div class="metrics-container">
+            <div class="metric-card">
+                <h3>Confusion Matrix</h3>
+                <div id="confusionMatrix"></div>
+            </div>
+            <div class="metric-card">
+                <h3>ROC Curves</h3>
+                <div id="rocCurves"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing...</div>
+    </div>
+
+    <script>
+        const socket = io();
+        
+        socket.on('loading_progress', (data) => {
+            updateProgress(data.percent, data.message);
+        });
+
+        socket.on('training_progress', (data) => {
+            updateProgress(data.percent, data.message);
+        });
+
+        function updateProgress(percent, message) {
+            const progressBar = document.querySelector('.progress-bar');
+            const progressText = document.querySelector('.progress-text');
+            const progressContainer = document.querySelector('.progress-container');
+            
+            progressContainer.style.display = 'block';
+            progressBar.style.width = `${percent}%`;
+            progressText.textContent = message;
+        }
+
+        function plotConfusionMatrix(confusionMatrix, classes) {
+            const data = [{
+                z: confusionMatrix,
+                x: classes,
+                y: classes,
+                type: 'heatmap',
+                colorscale: 'Viridis'
+            }];
+
+            const layout = {
+                title: 'Confusion Matrix',
+                xaxis: { title: 'Predicted' },
+                yaxis: { title: 'Actual' },
+                margin: { t: 50, l: 100 }
+            };
+
+            Plotly.newPlot('confusionMatrix', data, layout);
+        }
+
+        function plotROCCurves(rocCurves, classes) {
+            const data = rocCurves.map((curve, i) => ({
+                x: curve.fpr,
+                y: curve.tpr,
+                type: 'scatter',
+                name: `${classes[i]} (AUC = ${curve.auc.toFixed(2)})`
+            }));
+
+            const layout = {
+                title: 'ROC Curves',
+                xaxis: { title: 'False Positive Rate' },
+                yaxis: { title: 'True Positive Rate' },
+                showlegend: true,
+                margin: { t: 50 }
+            };
+
+            Plotly.newPlot('rocCurves', data, layout);
+        }
+
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const preview = document.getElementById('imagePreview');
+            const file = e.target.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('trainForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const trainButton = document.getElementById('trainButton');
+            const loadingOverlay = document.querySelector('.loading-overlay');
+            const modelType = document.getElementById('modelSelect').value;
+
+            trainButton.disabled = true;
+            loadingOverlay.style.display = 'flex';
+
+            try {
+                const response = await fetch('/train', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model_type: modelType })
+                });
+                const result = await response.json();
+
+                if (result.error) throw new Error(result.error);
+
+                plotConfusionMatrix(result.metrics.confusion_matrix, result.metrics.classes);
+                plotROCCurves(result.metrics.roc_curves, result.metrics.classes);
+
+                document.getElementById('result').innerHTML = `
+                    <div class="success">
+                        Training completed!<br>
+                        Accuracy: ${(result.accuracy * 100).toFixed(2)}%<br>
+                        Recall: ${(result.metrics.recall * 100).toFixed(2)}%<br>
+                        Precision: ${(result.metrics.precision * 100).toFixed(2)}%<br>
+                        F1 Score: ${(result.metrics.f1 * 100).toFixed(2)}%<br>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="error">Error: ${error.message}</div>
+                `;
+            } finally {
+                trainButton.disabled = false;
+                loadingOverlay.style.display = 'none';
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const predictButton = document.getElementById('predictButton');
+            const loadingOverlay = document.querySelector('.loading-overlay');
+            predictButton.disabled = true;
+            loadingOverlay.style.display = 'flex';
+            
+            const formData = new FormData(e.target);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.error) throw new Error(result.error);
+
+                let confidenceText = result.confidence 
+                    ? `<br>Confidence: ${(result.confidence * 100).toFixed(2)}%`
+                    : '';
+
+                document.getElementById('result').innerHTML = `
+                    <div class="success">
+                        Prediction: ${result.prediction}${confidenceText}
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="error">Error: ${error.message}</div>
+                `;
+            } finally {
+                predictButton.disabled = false;
+                loadingOverlay.style.display = 'none';
+            }
+        });
+
+
+
+        const dropZone = document.getElementById('dropZone');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const predictionsContainer = document.getElementById('predictionsContainer');
+        let selectedFiles = [];
+
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            handleFiles(files);
+        });
+
+        dropZone.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            handleFiles(files);
+        });
+
+        // Update the handleFiles function
+        function handleFiles(files) {
+            selectedFiles = [...selectedFiles, ...files];
+            updateImagePreviews();
+            
+            const imageCounter = document.getElementById('imageCounter');
+            const imageCount = document.getElementById('imageCount');
+            
+            if (selectedFiles.length > 0) {
+                imageCounter.style.display = 'inline-block';
+                imageCount.textContent = selectedFiles.length;
+                dropZone.classList.remove('empty');
+                dropZone.classList.add('has-files');
+            } else {
+                imageCounter.style.display = 'none';
+                dropZone.classList.remove('has-files');
+                dropZone.classList.add('empty');
+            }
+        }
+
+        function updateImagePreviews() {
+            imagePreviewContainer.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'image-preview-item';
+
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.alt = `Preview ${index + 1}`;
+
+                const removeButton = document.createElement('button');
+                removeButton.className = 'remove-image';
+                removeButton.innerHTML = '×';
+                removeButton.onclick = (e) => {
+                    e.preventDefault();
+                    selectedFiles = selectedFiles.filter((_, i) => i !== index);
+                    updateImagePreviews();
+                };
+
+                previewItem.appendChild(img);
+                previewItem.appendChild(removeButton);
+                imagePreviewContainer.appendChild(previewItem);
+            });
+        }
+
+        // Modify the upload form submit handler
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (selectedFiles.length === 0) {
+                document.getElementById('result').innerHTML = `
+                    <div class="error">Please select at least one image</div>
+                `;
+                return;
+            }
+
+            const predictButton = document.getElementById('predictButton');
+            const loadingOverlay = document.querySelector('.loading-overlay');
+            predictButton.disabled = true;
+            loadingOverlay.style.display = 'flex';
+            
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('images[]', file);
+            });
+            formData.append('modelType', document.getElementById('predictModelSelect').value);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.error) throw new Error(result.error);
+
+                // Display predictions
+                predictionsContainer.innerHTML = result.predictions.map(pred => `
+                    <div class="prediction-card">
+                        <h3 class="font-bold">${pred.prediction}</h3>
+                        ${pred.confidence ? 
+                            `<p>Confidence: ${(pred.confidence * 100).toFixed(2)}%</p>` 
+                            : ''}
+                    </div>
+                `).join('');
+
+                document.getElementById('result').innerHTML = `
+                    <div class="success">
+                        Successfully predicted ${result.predictions.length} images
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="error">Error: ${error.message}</div>
+                `;
+            } finally {
+                predictButton.disabled = false;
+                loadingOverlay.style.display = 'none';
+            }
+        });
+
+
+                // Clear button functionality
+                document.getElementById('clearButton').addEventListener('click', () => {
+            selectedFiles = [];
+            updateImagePreviews();
+            document.getElementById('imageCounter').style.display = 'none';
+            document.getElementById('dropZone').classList.remove('has-files');
+            document.getElementById('dropZone').classList.add('empty');
+            document.getElementById('result').innerHTML = '';
+            predictionsContainer.innerHTML = '';
+        });
+
+    </script>
+</body>
+</html>
